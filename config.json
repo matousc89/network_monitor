@@ -1,0 +1,167 @@
+{
+  "writer_settings": {
+    "sleep": 3,
+    "engine": {
+      "type": "csv",
+      "path": "data",
+      "delimiter": ",",
+      "extension": "3.csv"
+    }
+  },
+  "graph_settings": {
+    "path": "figures",
+    "hist_const": "300",
+    "hist_outlier": "0.98",
+    "round_digits": "4",
+    "lin_const": "40",
+    "percentage_digits": "2",
+    "open_browser": true
+  },
+  "map_settings": {
+    "user_location": "Prague",
+    "user_latitude": "50.0755",
+    "user_longitude": "14.4378",
+    "round_digits": "3",
+    "open_browser": true,
+    "warning_colors": {
+      "green": {
+        "min": 0,
+        "max": 0.09
+      },
+      "orange": {
+        "min": 0.09,
+        "max": 0.5
+      },
+      "red": {
+        "min": 0.5,
+        "max": 10
+      }
+    },
+    "default_color": "black"
+  },
+  "tasks": [
+    {
+      "type": "ping",
+      "address": "ut1-time.colorado.edu",
+      "freq": "5S"
+    },
+    {
+      "type": "ping",
+      "address": "216.58.223.255",
+      "freq": "10S"
+    },
+    {
+      "type": "ping",
+      "address": "139.130.4.5",
+      "daytime": "5s"
+    },
+    {
+      "type": "ping",
+      "address": "23.223.89.218",
+      "freq": "10s"
+    },
+    {
+      "type": "ping",
+      "address": "95.163.141.82",
+      "freq": "11s"
+    },
+    {
+      "type": "ping",
+      "address": "210.0.255.251",
+      "freq": "30S"
+    },
+    {
+      "type": "ping",
+      "address": "105.235.209.255",
+      "daytime": "15s"
+    },
+    {
+      "type": "ping",
+      "address": "23.35.40.237",
+      "freq": "30s"
+    },
+    {
+      "type": "ping",
+      "address": "redstation.com",
+      "freq": "5s"
+    },
+    {
+      "type": "ping",
+      "address": "gjirafa50.com",
+      "freq": "15S"
+    },
+    {
+      "type": "ping",
+      "address": "91.132.197.219",
+      "freq": "5S"
+    }
+  ],
+  "server_info": {
+    "ut1-time.colorado.edu": {
+      "location": "Boulder",
+      "latitude": "40.014984",
+      "longitude": "-105.270546",
+      "company": "..."
+    },
+    "216.58.223.255": {
+      "location": "Johannesburg",
+      "latitude": "-26.2041",
+      "longitude": "28.0473",
+      "hw info": "..."
+    },
+    "139.130.4.5": {
+      "location": "Melbourne",
+      "latitude": "-37.840935",
+      "longitude": "144.946457",
+      "hw info": "..."
+    },
+    "23.223.89.2186": {
+      "location": "Madrid",
+      "latitude": "40.416775",
+      "longitude": "-3.703790",
+      "hw info": "..."
+    },
+    "95.163.141.82": {
+      "location": "Moscow",
+      "latitude": "55.7558",
+      "longitude": "37.6173",
+      "hw info": "..."
+    },
+    "210.0.255.251": {
+      "location": "Hong Kong",
+      "latitude": "22.3193",
+      "longitude": "114.1694",
+      "hw info": "..."
+    },
+    "105.235.209.255": {
+      "location": "Juba",
+      "latitude": "4.859363",
+      "longitude": "31.571251",
+      "hw info": "..."
+    },
+    "23.35.40.237": {
+      "location": "New Delhi",
+      "latitude": "28.644800",
+      "longitude": "77.216721",
+      "hw info": "..."
+    },
+    "redstation.com": {
+      "location": "Glasgow",
+      "latitude": "55.860916",
+      "longitude": "-4.251433",
+      "hw info": "..."
+    },
+    "gjirafa50.com": {
+      "location": "Prishtina",
+      "latitude": "42.667542",
+      "longitude": "21.166191",
+      "hw info": "..."
+    },
+    "91.132.197.219": {
+      "location": "Helsinki",
+      "latitude": "60.192059",
+      "longitude": "24.945831",
+      "hw info": "..."
+    }
+  }
+}
