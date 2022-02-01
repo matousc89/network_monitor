@@ -12,6 +12,7 @@ running this script in.
 
 import json
 import os
+from pathlib import Path
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -239,6 +240,11 @@ percentage_digits = int(graph_settings["percentage_digits"])
 OPEN_BROWSER = graph_settings["open_browser"]
 dfs = storage_engine.get_tables()
 df = dfs["ping"]
+Path(path).mkdir(exist_ok=True)
+Path("{}/svg".format(path)).mkdir(exist_ok=True)
+Path("{}/png".format(path)).mkdir(exist_ok=True)
+
+
 
 html_content = []
 
