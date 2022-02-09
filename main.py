@@ -12,25 +12,27 @@ environment you are running this script in.
 """
 
 import threading, queue
+from datetime import datetime
 import time
 import json
 import copy
 
 import ping3
-from datetime import datetime
 
 from storages.engines import get_writer_engine
 
 
 def ping(address):
-    """Convert None values to -1."""
+    """Convert None values to -1 and 0.0 values to 0.016."""
     result = ping3.ping(address)
 
     if type(result) == float:
-        return result
+        if result == 0.0:
+            return 0.016
+        else:
+            return result
     else:
         return -1
-
 
 def get_granularity(granularity):
     """Convert frequencies to seconds."""
@@ -40,7 +42,7 @@ def get_granularity(granularity):
         "S": 1,
         "D": 24 * 60 * 60,
     }
-    number, letter = int(granularity[:-1]), granularity[-1].upper()
+    number, letter = int(granularity[:-1]), granularity[-1]
     return number * FREQS[letter]
 
 
