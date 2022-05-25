@@ -1,0 +1,22 @@
+{
+    "writer_settings": {
+        "sleep": 3
+    },
+    "primaryServer": [
+        {
+          "ip_addr": "127.0.0.1:8000"
+        }
+    ],
+    "clientSettings": [
+      {
+        "name": "client1"
+      }
+  ],
+    "tasks": [
+        {
+          "type": "ping",
+          "address": "ut1-time.colorado.edu",
+          "freq": "5S"
+        }
+    ]
+}
