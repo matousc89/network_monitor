@@ -1,6 +1,3 @@
-from class1.adresses import Adresses
-from class1.sqlConnector import sql
-
 """Main
 
 This script has the main loop where the tasks are executed by a new thread and
@@ -13,21 +10,19 @@ This script requires that `ping3` and `datetime` be installed within the Python
 environment you are running this script in.
 
 """
-
-import threading, queue
+import threading
+import queue
 import time
 import json
 import copy
-
-import ping3
 from datetime import datetime
+from module.sql_connector import SqlConnector
+import ping3
 
-from class1.sqlConnector import sql
+sql_conn = SqlConnector()
+sql_conn.set_null_next_run()
 
-sqlConn = sql()
-sqlConn.setNullNextRun()
-
-print(sqlConn.getAvrgResponseAll())
+print(sql_conn.get_avrg_response_all())
 
 #from storages.engines import get_writer_engine
 
@@ -36,25 +31,27 @@ def ping(address):
     result = ping3.ping(address)
 
     if type(result) == float:
-        return result
+        return_text = result
     else:
-        return -1
+        return_text = -1
+
+    return return_text
 
 
 def get_granularity(granularity):
     """Convert frequencies to seconds."""
-    FREQS = {
+    freqs = {
         "H": 60 * 60,
         "M": 60,
         "S": 1,
         "D": 24 * 60 * 60,
     }
     number, letter = int(granularity[:-1]), granularity[-1].upper()
-    return number * FREQS[letter]
+    return number * freqs[letter]
 
-def execute_task_NEW(address, freq):
+def execute_task_new(address, freq):
     """Assign a new thread to the new task."""
-    sqlConn.setNextTimeBuffer(address) #security buffer, in thread will be rewritten
+    sql_conn.set_next_time_buffer(address) #security buffer, in thread will be rewritten
     threading.Thread(target=execute_thread, args=('ping',address,freq), daemon=True).start()
 
 
@@ -74,7 +71,6 @@ def execute_thread(task_type, address, freq):
             "value": ping(address)
         }
     else:
-        # TODO: add any other task_type ex.(trace route, http requests, etc)
         pass
     response_queue.put(response)
 
@@ -86,7 +82,8 @@ def writer_loop(settings):
         while not response_queue.empty():
             response = response_queue.get()
             # writing the response based on the storage_engine
-            sqlConn.addResponse(response["address"], response["time"], response["value"], response["nextTime"])
+            sql_conn.add_response(response["address"], response["time"],
+                response["value"], response["nextTime"])
             response_queue.task_done()
             time.sleep(0.001)
         time.sleep(settings["sleep"])
@@ -94,56 +91,29 @@ def writer_loop(settings):
 
 response_queue = queue.Queue() # the response queue is the thread queue
 
-with open("config.json", "r") as f:
+with open("config.json", "r", encoding='utf-8') as f:
     config = json.loads(f.read())
 tasks = config["tasks"]
 
 
 
 # Result queue thread
-threading.Thread(target=writer_loop, args=[copy.copy(config["writer_settings"])], daemon=True).start()
+threading.Thread(target=writer_loop,
+    args=[copy.copy(config["writer_settings"])], daemon=True).start()
 
-for i in sqlConn.getAllAddr():
-    execute_task_NEW(i["ip_addr"], i["freq"])
+for i in sql_conn.get_all_addr():
+    execute_task_new(i["ip_addr"], i["freq"])
 
 while True:
     now = datetime.now()
     current_time = now.strftime("%H:%M")
-    ipNextTurn = sqlConn.getNextIpAddr()
+    ipNextTurn = sql_conn.get_next_ip_addr()
 
     ipNextTime = int(ipNextTurn.next_run)
     ipAddrNextTurn = ipNextTurn.ip_addr
     ipFreqNextTurn = ipNextTurn.freq
 
     if(ipNextTime < time.time()):
-        execute_task_NEW(ipAddrNextTurn, ipFreqNextTurn)
-
-    """Separating the frequencies and the daytime tasks."""
-    """for task in tasks:
-        # logic for frequency based tasks
-        if "freq" in task.keys():
-            if not "last_run" in task.keys(): # starting from scratch
-                execute_task(task)
-            else:
-                if time.time() > get_granularity(task["freq"]) + task["last_run"]:
-                    execute_task(task)
-        # logic for daytime based tasks
-        elif "daytime" in task.keys():
-            if not "next_run" in task.keys() and current_time == task["daytime"]:
-
-                execute_task(task)
-            elif "next_run" in task.keys():
-                if time.time() >= task["next_run"] and current_time == task["daytime"]:
-                    execute_task(task)
-         # if no information known?
-        else:
-            error = {
-                "type": task["type"],
-                "address": task["address"],
-                "value": "Error"
-            }"""
+        execute_task_new(ipAddrNextTurn, ipFreqNextTurn)
 
     time.sleep(0.3)
-
-
-

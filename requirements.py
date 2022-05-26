@@ -1,0 +1,4 @@
+fastapi
+request
+sqlalchemy
+logging
