@@ -1,0 +1,32 @@
+{
+  "responses": [
+    {
+      "ip_addr": "100.100.100.102",
+      "time": 1653600000,
+      "value": 37,
+      "task": "ping",
+      "worker": "home1"
+    },
+    {
+      "ip_addr": "100.100.100.102",
+      "time": 1653500000,
+      "value": 43,
+      "task": "ping",
+      "worker": "home1"
+    },
+    {
+      "ip_addr": "www.example.com",
+      "time": 1653600001,
+      "value": 37,
+      "task": "ping",
+      "worker": "home1"
+    },
+    {
+      "ip_addr": "100.100.100.100",
+      "time": 1653400000,
+      "value": 150,
+      "task": "ping",
+      "worker": "home1"
+    }
+  ]
+}

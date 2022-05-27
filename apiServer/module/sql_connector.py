@@ -107,4 +107,4 @@ class SqlConnector():
                     "average": query.with_entities(func.avg(Response.value)).one()[0],
                     "count": query.count()
                 })
-        return {"status": True}
+        return outcome
