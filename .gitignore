@@ -3,6 +3,9 @@ data/
 figures/
 index.html
 my_map.html
+*.log
+*.db
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
