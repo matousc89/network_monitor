@@ -6,10 +6,12 @@ import sys
 TESTING = False
 DATASTORE_DATABASE = "datastore.db"
 DATASTORE_APP_ADDRESS = ("127.0.0.1", 8000)
-DATASTORE_LOG = 'datastore.log'
+
+LOG = 'datastore.log'
 
 if 'unittest' in sys.modules.keys():
     TESTING = True
     DATASTORE_DATABASE = "datastore_test.db"
     DATASTORE_APP_ADDRESS = ("127.0.0.1", 5000)
-    DATASTORE_LOG = 'datastore_test.log'
+
+    LOG = 'datastore_test.log'
