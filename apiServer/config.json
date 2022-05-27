@@ -3,12 +3,12 @@
     {
       "type": "ping",
       "address": "ut1-time.colorado.edu",
-      "freq": "5S"
+      "frequency": "5S"
     },
     {
       "type": "ping",
       "address": "216.58.223.255",
-      "freq": "10S"
+      "frequency": "10S"
     },
     {
       "type": "ping",
@@ -18,17 +18,17 @@
     {
       "type": "ping",
       "address": "23.223.89.218",
-      "freq": "10s"
+      "frequency": "10s"
     },
     {
       "type": "ping",
       "address": "95.163.141.82",
-      "freq": "11s"
+      "frequency": "11s"
     },
     {
       "type": "ping",
       "address": "210.0.255.251",
-      "freq": "30S"
+      "frequency": "30S"
     },
     {
       "type": "ping",
@@ -38,22 +38,22 @@
     {
       "type": "ping",
       "address": "23.35.40.237",
-      "freq": "30s"
+      "frequency": "30s"
     },
     {
       "type": "ping",
       "address": "redstation.com",
-      "freq": "5s"
+      "frequency": "5s"
     },
     {
       "type": "ping",
       "address": "gjirafa50.com",
-      "freq": "15S"
+      "frequency": "15S"
     },
     {
       "type": "ping",
       "address": "91.132.197.219",
-      "freq": "5S"
+      "frequency": "5S"
     }
   ],
   "server_info": {

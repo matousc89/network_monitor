@@ -1,4 +1,4 @@
 fastapi
 request
 sqlalchemy
-logging
+unicorn
