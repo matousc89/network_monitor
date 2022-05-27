@@ -9,6 +9,7 @@ from modules.sql_connector import DatastoreSqlConnector
 
 from settings import TESTING
 
+
 sql_conn = DatastoreSqlConnector()
 sql_conn.update_ip_address()
 if TESTING:
