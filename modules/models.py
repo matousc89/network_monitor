@@ -31,7 +31,7 @@ class Task(Item, Base):
 
     frequency = Column(Integer)
     last_run = Column(Integer)
-    next_run = Column(Integer)
+    next_run = Column(Integer) # TODO purge
 
 
 def make_tables(engine):

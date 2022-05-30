@@ -11,7 +11,6 @@ from settings import TESTING
 
 
 sql_conn = DatastoreSqlConnector()
-sql_conn.update_ip_address()
 if TESTING:
     sql_conn.clear_all_tables()
 
@@ -22,16 +21,6 @@ app = FastAPI()
 def read_root():
     """ access via FastApi, root directory return true value """
     return {"status": True}
-
-# @app.get("/getTasks")
-# def read_ip_adresses():
-#     """
-#     Read config file and generate json of tasks (database fixture) TODO: should be optional
-#     """
-#     with open("apiServer/config.json", "r", encoding="utf-8") as readed_text:
-#         config = json.loads(readed_text.read())
-#     tasks = config["tasks"]
-#     return tasks
 
 @app.get("/getAverageResponse")
 def get_avrg_response(date_from: Optional[str] = None, date_to: Optional[str] = None):
@@ -55,3 +44,10 @@ def add_response(ip_addr, time, value, task, worker):
     """
     sql_conn.add_response(ip_addr, time, value, task, worker)
     return {"status": True}
+
+@app.get("/getWorkerTasks")
+def add_response(worker):
+    """
+    Return tasks for given worker
+    """
+    return sql_conn.get_worker_tasks(worker)
