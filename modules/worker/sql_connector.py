@@ -2,32 +2,33 @@
 takes care of the connection to the database
 """
 import logging
+import time
 
 from sqlalchemy.sql import func
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
 
-from settings import DATASTORE_DATABASE
+from settings import WORKER_DATABASE
 from settings import LOG
-from modules.datastore.models import Response, Task
-from modules.datastore.models import make_tables
+from modules.worker.models import Response, Task
+from modules.worker.models import make_tables
 from modules.sql_connector import CommonSqlConnector
 
-class DatastoreSqlConnector(CommonSqlConnector):
+
+class WorkerSqlConnector(CommonSqlConnector):
     """
-    Extra sql operations required for Datastore.
+    Extra sql operations required for Worker.
     """
 
-    def __init__(self):
+    def __init__(self, worker):
         """
         Init the sql connector (connect, prepare tables, setup logging).
         """
+        self.worker = worker
         logging.basicConfig(filename=LOG, encoding='utf-8', level=logging.DEBUG)
-        engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=False)
+        engine = db.create_engine('sqlite:///{}'.format(WORKER_DATABASE), echo=False)
         make_tables(engine)
         self.sessions = sessionmaker(engine)
-
-
 
     def clear_all_tables(self):
         """
@@ -37,81 +38,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
             session.query(Task).delete()
             session.query(Response).delete()
 
-    def get_all_addr(self):
-        """
-        Get all unique addresses
-        """
-        with self.sessions.begin() as session:
-            result = list(session.query(Response.ip_address).distinct())
-        return result
-
-    def add_response(self, ip_address, time, value, task, worker):
-        """
-        write response of tested address to db
-        """ # TODO update last time of task
-        result = Response(
-            ip_address=ip_address,
-            time=int(time),
-            value=int(value),
-            task=task,
-            worker=worker
-        )
-        with self.sessions.begin() as session:
-            session.add(result)
-
-    def get_avrg_response_all(self, date_from=None, date_to=None):
-        """
-        generate JSON of average response time of each ip addresses, dateFrom and dateTo are optional
-        """ # TODO time selection
-        outcome = []
-        with self.sessions.begin() as session:
-            for item in session.query(Response.ip_address).distinct():
-                address = item[0]
-                # TODO optimize query
-                value = session.query(func.avg(Response.value)).filter(Response.ip_address == address).one()[0]
-                outcome.append({"address": address, "value": int(value)})
-        return outcome
-
-    def get_address_info(self, time_from=False, time_to=False):
-        """
-            get info is detailed list of addresses (generate: number of addr records,
-            first time testing, last time testing and average responsing time)
-        """
-        outcome = []
-        with self.sessions.begin() as session:
-            for item in session.query(Response.ip_address).distinct():
-                address = item[0]
-                query = session.query(Response).filter(Response.ip_address == address)
-                if time_from:
-                    query = query.filter(Response.time > time_from)
-                if time_to:
-                    query = query.filter(Response.time < time_to)
-                outcome.append({
-                    "address": address,
-                    "first_response": query.order_by(Response.time).first().time,
-                    "last_response": query.order_by(Response.time.desc()).first().time,
-                    "average": query.with_entities(func.avg(Response.value)).one()[0],
-                    "count": query.count()
-                })
-        return outcome
-
-    def get_worker_tasks(self, worker):
-        """
-        Returns list of tasks for requested worker.
-        """
-        with self.sessions.begin() as session:
-            query = session.query(Task).filter(Task.worker == worker)
-            return [item.__dict__ for item in query.all()]
-
-
-class WorkerSqlConnector(CommonSqlConnector):
-
-    def update_worker_tasks(self):
-        """
-        Update worker tasks.
-        """
-
-    def add_response(self, ip_address, time, value, task, worker):
+    def add_response(self, ip_address, time, value, task):
         """
         write response of tested address to db
         """
@@ -120,7 +47,42 @@ class WorkerSqlConnector(CommonSqlConnector):
             time=int(time),
             value=int(value),
             task=task,
-            worker=worker
+            worker=self.worker
         )
         with self.sessions.begin() as session:
             session.add(result)
+
+    def update_tasks(self, tasks):
+        """Manage incoming tasks from datastore.
+
+        New tasks are created.
+        Already existing tasks are annotated with current timestamp and updated.
+        Stored tasks without current timestamp are deleted.
+        """
+        active_stamp = int(time.time() * 1000)
+        with self.sessions.begin() as session:
+            for incoming_task in tasks:
+                existing_task = session.query(Task).filter(
+                    Task.ip_address == incoming_task["ip_address"],
+                    Task.task == incoming_task["task"]
+                ).first()
+                if existing_task is not None:
+                    existing_task.frequency = incoming_task["frequency"]
+                    existing_task.active = active_stamp
+                else:
+                    new_task = Task(
+                        ip_address=incoming_task["ip_address"],
+                        task=incoming_task["task"],
+                        frequency=incoming_task["frequency"],
+                        active=active_stamp,
+                    )
+                    session.add(new_task)
+            session.query(Task).filter(Task.active < active_stamp).delete()
+
+    def get_tasks(self):
+        """
+        Get all tasks.
+        """
+        with self.sessions.begin() as session:
+            query = session.query(Task)
+            return [item.values() for item in query.all()]

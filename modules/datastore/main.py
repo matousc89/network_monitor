@@ -1,11 +1,10 @@
 """
 Fast api setup and routes for datastore.
 """
-import json
 from typing import Optional
 from fastapi import FastAPI
 
-from modules.sql_connector import DatastoreSqlConnector
+from modules.datastore.sql_connector import DatastoreSqlConnector
 
 from settings import TESTING
 
@@ -38,11 +37,11 @@ def get_address_info(time_from: Optional[str] = None, time_to: Optional[str] = N
     return sql_conn.get_address_info(time_from, time_to)
 
 @app.get("/addResponse")
-def add_response(ip_addr, time, value, task, worker):
+def add_response(ip_address, time, value, task, worker):
     """
     create new row (response) into db
     """
-    sql_conn.add_response(ip_addr, time, value, task, worker)
+    sql_conn.add_response(ip_address, time, value, task, worker)
     return {"status": True}
 
 @app.get("/getWorkerTasks")

@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {
+      "ip_address": "www.google.com",
+      "frequency": "5S",
+      "task": "ping"
+    },
+    {
+      "ip_address": "www.example.com",
+      "frequency": "5S",
+      "task": "ping"
+    }
+  ]
+}

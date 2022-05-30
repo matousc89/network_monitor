@@ -1,19 +1,15 @@
-from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, Integer, String
 
-Base = declarative_base()
-
-class Item():
+class BaseItem():
     """
     Attributes common for Response and Task.
     """
     id = Column(Integer, primary_key=True)
     ip_address = Column(String(100))
-    worker = Column(String(100))
     task = Column(String(100))
 
 
-class Response(Item, Base):
+class BaseResponse(BaseItem):
     """
     Outcome of any task/test/measurement.
     """
@@ -23,7 +19,7 @@ class Response(Item, Base):
     value = Column(Integer)
 
 
-class Task(Item, Base):
+class BaseTask(BaseItem):
     """
     Definition of task.
     """
@@ -31,11 +27,5 @@ class Task(Item, Base):
 
     frequency = Column(Integer)
     last_run = Column(Integer)
-    next_run = Column(Integer) # TODO purge
 
 
-def make_tables(engine):
-    """
-    Crate tables if they do not exist.
-    """
-    Base.metadata.create_all(engine, checkfirst=True)
