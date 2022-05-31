@@ -110,3 +110,14 @@ class WorkerSqlConnector(CommonSqlConnector):
         )
         with self.sessions.begin() as session:
             session.add(result)
+
+    def get_unsynced_responses(self):
+        with self.sessions.begin() as session:
+            query = session.query(Response).filter(Response.synced == False)
+            return [item.sync_values() for item in query.all()]
+
+    def mark_responses_as_synced(self, responses):
+        id_list = [item["id"] for item in responses]
+        with self.sessions.begin() as session:
+            session.query(Response).filter(
+                Response.id.in_(id_list)).update({Response.synced: True})

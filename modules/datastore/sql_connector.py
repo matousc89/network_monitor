@@ -39,6 +39,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         write response of tested address to db
         """ # TODO update last time of task
+        # TODO obsolete since worker sync
         result = Response(
             ip_address=ip_address,
             time=int(time),
@@ -91,8 +92,26 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         with self.sessions.begin() as session:
             query = session.query(Task).filter(Task.worker == worker)
-            return [item.__dict__ for item in query.all()]
+            return [item.__dict__ for item in query.all()] # TODO make custom function in Task class (instead of __dict__)
 
+    def sync_worker(self, data):
+        """
+        Sync worker - store responses and return tasks
+        """
+        with self.sessions.begin() as session:
+            for response in data["responses"]:
+                result = Response(
+                    ip_address=response["ip_address"],
+                    time=response["time"],
+                    value=response["value"],
+                    task=response["task"],
+                    worker=data["worker"]
+                )
+                session.add(result)
+                # TODO alter task last update
+
+            tasks = session.query(Task).filter(Task.worker == data["worker"])
+            return [item.__dict__ for item in tasks.all()] # TODO make custom function in Task class (instead of __dict__)
 
     def clear_all_tables(self):
         """

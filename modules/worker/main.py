@@ -2,15 +2,13 @@
 Worker main contain the worker main class.
 """
 import threading
-# import queue
 import time
-# import json
-import ping3
 import requests
 
-from settings import DATASTORE_APP_URL
+from settings import DATASTORE_APP_URL, DATASTORE_APP_ADDRESS
 from modules.worker.sql_connector import WorkerSqlConnector
-from modules.common import ms_time, get_granularity
+from modules.worker.measurements import get_response_ping
+from modules.common import ms_time, get_granularity, build_url
 
 class Worker():
     """
@@ -19,16 +17,21 @@ class Worker():
 
     def __init__(self):
         self.name = "default" # TODO store somewhere else
-        self.datastore_url = DATASTORE_APP_URL + "getWorkerTasks"
-        # self.response_queue = queue.Queue()
+        self.datastore_url = DATASTORE_APP_URL + "getWorkerTasks" # TODO correct one
         self.sql_conn = WorkerSqlConnector(self.name)
         self.run()
 
     def __io_loop(self):
         """Filling up the storing queue with the data."""
         while True:
-            # TODO sync responses (in one request with task update)
-            tasks = requests.get(self.datastore_url, params={"worker": self.name}).json()
+            responses = self.sql_conn.get_unsynced_responses() # TODO presync functions
+            url = build_url(*DATASTORE_APP_ADDRESS, "syncWorker")
+            payload = {
+                "worker": self.name,
+                "responses": responses,
+            }
+            tasks = requests.post(url, json=payload).json()
+            self.sql_conn.mark_responses_as_synced(responses) # TODO postsync functions - replace with one sql command
             self.sql_conn.update_all_tasks(tasks)
             time.sleep(3)
 
@@ -69,14 +72,6 @@ class Worker():
 
             time.sleep(0.3)
 
-def get_response_ping(address):
-    """Convert None values to -1."""
-    result = ping3.ping(address)
-
-    if type(result) == float:
-        return ms_time(result)
-    else:
-        return -1
 
 
 

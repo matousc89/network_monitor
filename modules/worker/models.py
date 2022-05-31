@@ -11,6 +11,15 @@ class Response(BaseResponse, Base):
     """
     synced = Column(Boolean)
 
+    def sync_values(self):
+        return {
+            "id": self.id,
+            "ip_address": self.ip_address,
+            "task": self.task,
+            "time": self.time,
+            "value": self.value
+        }
+
 
 class Task(BaseTask, Base):
     """

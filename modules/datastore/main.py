@@ -2,7 +2,7 @@
 Fast api setup and routes for datastore.
 """
 from typing import Optional
-from fastapi import FastAPI
+from fastapi import Request, FastAPI
 
 from modules.datastore.sql_connector import DatastoreSqlConnector
 
@@ -24,7 +24,8 @@ def read_root():
 @app.get("/getAverageResponse")
 def get_avrg_response(date_from: Optional[str] = None, date_to: Optional[str] = None):
     """
-        generate JSON of average response time of each ip addresses, dateFrom and dateTo are optional
+        generate JSON of average response time of each ip addresses,
+        dateFrom and dateTo are optional
     """
     # TODO why the address is not selectable?
     return sql_conn.get_avrg_response_all(date_from, date_to)
@@ -45,8 +46,13 @@ def add_response(ip_address, time, value, task, worker):
     return {"status": True}
 
 @app.get("/getWorkerTasks")
-def add_response(worker):
+def get_worker_tasks(worker):
     """
     Return tasks for given worker
     """
     return sql_conn.get_worker_tasks(worker)
+
+@app.post("/syncWorker")
+async def sync_worker(request: Request):
+    data = await request.json()
+    return sql_conn.sync_worker(data)

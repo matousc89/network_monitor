@@ -1,3 +1,6 @@
+"""
+Tests related to datastore
+"""
 import json
 import unittest
 import pathlib
@@ -10,7 +13,6 @@ from modules.common import build_url
 
 class TestingDatastore(unittest.TestCase):
 
-    # URL = "http://{}:{}/".format(*DATASTORE_APP_ADDRESS)
     datapath = pathlib.PurePath("tests", "test_datastore.json")
     with open(datapath, "r", encoding="utf-8") as f:
         data = json.loads(f.read())
