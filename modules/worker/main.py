@@ -14,12 +14,11 @@ class Worker():
     """
     Worker class
     """
-
     def __init__(self):
         self.name = "default" # TODO store somewhere else
         self.datastore_url = DATASTORE_APP_URL + "getWorkerTasks" # TODO correct one
         self.sql_conn = WorkerSqlConnector(self.name)
-        self.run()
+        self.__run()
 
     def __io_loop(self):
         """Filling up the storing queue with the data."""
@@ -30,17 +29,17 @@ class Worker():
                 "worker": self.name,
                 "responses": responses,
             }
-            tasks = requests.post(url, json=payload).json()
+            tasks = requests.post(url, json=payload).json() # TODO catch exception
             self.sql_conn.mark_responses_as_synced(responses) # TODO postsync functions - replace with one sql command
             self.sql_conn.update_all_tasks(tasks)
             time.sleep(3)
 
-    def execute_task(self, task):
+    def __execute_task(self, task):
         """Start execution thread
         """
-        threading.Thread(target=self.start_task_thread, args=(task,), daemon=True).start()
+        threading.Thread(target=self.__task_thread, args=(task,), daemon=True).start()
 
-    def start_task_thread(self, task):
+    def __task_thread(self, task):
         """Execute task in thread.
         """
         # TODO calculate exact time, put it in database and wait
@@ -56,7 +55,7 @@ class Worker():
             pass # TODO report unwknown task
         self.sql_conn.add_response(task)
 
-    def run(self):
+    def __run(self):
         """
         Main loop of the worker class.
         """
@@ -66,9 +65,9 @@ class Worker():
             now = ms_time()
             for task in tasks:
                 if task["last_run"] == None:
-                    self.execute_task(task)
+                    self.__execute_task(task)
                 elif task["next_run"] < now: # TODO add time buffer?
-                    self.execute_task(task)
+                    self.__execute_task(task)
 
             time.sleep(0.3)
 
