@@ -17,9 +17,7 @@ class Task(BaseTask, Base):
     Definition of task.
     """
     active = Column(Integer)
-    # frequency = Column(Integer)
-    # last_run = Column(Integer)
-    # next_run = Column(Integer) # TODO purge
+    next_run = Column(Integer)
 
     def values(self):
         return {
@@ -27,6 +25,8 @@ class Task(BaseTask, Base):
             "active": self.active,
             "frequency": self.frequency,
             "task": self.task,
+            "next_run": self.next_run,
+            "last_run": self.last_run,
         }
 
 

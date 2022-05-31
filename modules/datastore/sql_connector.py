@@ -93,6 +93,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
             query = session.query(Task).filter(Task.worker == worker)
             return [item.__dict__ for item in query.all()]
 
+
     def clear_all_tables(self):
         """
         Clear content from tables (for testing purposes mainly).

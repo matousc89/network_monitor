@@ -4,7 +4,6 @@ takes care of the connection to the database
 import logging
 import time
 
-from sqlalchemy.sql import func
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
 
@@ -13,7 +12,7 @@ from settings import LOG
 from modules.worker.models import Response, Task
 from modules.worker.models import make_tables
 from modules.sql_connector import CommonSqlConnector
-
+from modules.common import ms_time
 
 class WorkerSqlConnector(CommonSqlConnector):
     """
@@ -52,14 +51,14 @@ class WorkerSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             session.add(result)
 
-    def update_tasks(self, tasks):
+    def update_all_tasks(self, tasks):
         """Manage incoming tasks from datastore.
 
         New tasks are created.
         Already existing tasks are annotated with current timestamp and updated.
         Stored tasks without current timestamp are deleted.
         """
-        active_stamp = int(time.time() * 1000)
+        active_stamp = ms_time()
         with self.sessions.begin() as session:
             for incoming_task in tasks:
                 existing_task = session.query(Task).filter(
@@ -79,6 +78,17 @@ class WorkerSqlConnector(CommonSqlConnector):
                     session.add(new_task)
             session.query(Task).filter(Task.active < active_stamp).delete()
 
+    def update_task(self, task_data):
+        """Update information about execution of the given task.
+        """
+        with self.sessions.begin() as session:
+            task = session.query(Task).filter(
+                Task.ip_address == task_data["ip_address"],
+                Task.task == task_data["task"]
+            ).first()
+            task.next_run = task_data["next_run"]
+            task.last_run = task_data["last_run"]
+
     def get_tasks(self):
         """
         Get all tasks.
@@ -86,3 +96,17 @@ class WorkerSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             query = session.query(Task)
             return [item.values() for item in query.all()]
+
+    def add_response(self, response):
+        """
+        write response of tested address to database
+        """
+        result = Response(
+            ip_address=response["ip_address"],
+            time=response["last_run"],
+            value=response["value"],
+            task=response["task"],
+            synced=False,
+        )
+        with self.sessions.begin() as session:
+            session.add(result)

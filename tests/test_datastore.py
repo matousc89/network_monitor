@@ -6,11 +6,11 @@ import requests
 
 from run import run_storage_app_process
 from settings import DATASTORE_APP_ADDRESS
-
+from modules.common import build_url
 
 class TestingDatastore(unittest.TestCase):
 
-    URL = "http://{}:{}/".format(*DATASTORE_APP_ADDRESS)
+    # URL = "http://{}:{}/".format(*DATASTORE_APP_ADDRESS)
     datapath = pathlib.PurePath("tests", "test_datastore.json")
     with open(datapath, "r", encoding="utf-8") as f:
         data = json.loads(f.read())
@@ -26,17 +26,18 @@ class TestingDatastore(unittest.TestCase):
         cls.proc.kill()
 
     def test000_root(self):
-        r = requests.get(self.URL).json()
+        url = build_url(*DATASTORE_APP_ADDRESS)
+        r = requests.get(url).json()
         self.assertEqual(r["status"], True)
 
     def test010_add_response(self):
-        url = self.URL + "addResponse"
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="addResponse")
         for params in self.data["responses"]:
             r = requests.get(url, params=params).json()
             self.assertEqual(r["status"], True)
 
     def test020_get_average_response(self):
-        url = self.URL + "getAverageResponse"
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="getAverageResponse")
         r = requests.get(url).json()
         value = -1
         for item in r:
@@ -45,7 +46,7 @@ class TestingDatastore(unittest.TestCase):
         self.assertEqual(value, 40)
 
     def test030_get_address_info(self):
-        url = self.URL + "getAddressInfo"
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="getAddressInfo")
         params = {
             "time_from": 100,
         }

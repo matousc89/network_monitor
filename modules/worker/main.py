@@ -2,14 +2,15 @@
 Worker main contain the worker main class.
 """
 import threading
-import queue
+# import queue
 import time
-import json
+# import json
 import ping3
 import requests
 
 from settings import DATASTORE_APP_URL
 from modules.worker.sql_connector import WorkerSqlConnector
+from modules.common import ms_time, get_granularity
 
 class Worker():
     """
@@ -19,91 +20,64 @@ class Worker():
     def __init__(self):
         self.name = "default" # TODO store somewhere else
         self.datastore_url = DATASTORE_APP_URL + "getWorkerTasks"
-        self.response_queue = queue.Queue()
+        # self.response_queue = queue.Queue()
         self.sql_conn = WorkerSqlConnector(self.name)
         self.run()
 
-    def io_loop(self):
+    def __io_loop(self):
         """Filling up the storing queue with the data."""
         while True:
-            while not self.response_queue.empty():
-                response = self.response_queue.get()
-                # writing the response based on the storage_engine # TODO store response
-                # sql_conn.add_response(response["address"], response["time"],
-                #                       response["value"], response["nextTime"])
-                # response_queue.task_done()
-                time.sleep(0.1)
-
+            # TODO sync responses (in one request with task update)
             tasks = requests.get(self.datastore_url, params={"worker": self.name}).json()
-            self.sql_conn.update_tasks(tasks)
-
+            self.sql_conn.update_all_tasks(tasks)
             time.sleep(3)
+
+    def execute_task(self, task):
+        """Start execution thread
+        """
+        threading.Thread(target=self.start_task_thread, args=(task,), daemon=True).start()
+
+    def start_task_thread(self, task):
+        """Execute task in thread.
+        """
+        # TODO calculate exact time, put it in database and wait
+        now = ms_time()
+        task["last_run"] = now
+        task["next_run"] = now + get_granularity(task["frequency"])
+        self.sql_conn.update_task(task)
+        # TODO wait to exact time
+        if task["task"] == "ping":
+            # TODO make it happen
+            task["value"] = get_response_ping(task["ip_address"])
+        else:
+            pass # TODO report unwknown task
+        self.sql_conn.add_response(task)
 
     def run(self):
-        threading.Thread(target=self.io_loop, daemon=True).start()
+        """
+        Main loop of the worker class.
+        """
+        threading.Thread(target=self.__io_loop, daemon=True).start()
         while True:
-            pass
+            tasks = self.sql_conn.get_tasks()
+            now = ms_time()
+            for task in tasks:
+                if task["last_run"] == None:
+                    self.execute_task(task)
+                elif task["next_run"] < now: # TODO add time buffer?
+                    self.execute_task(task)
 
-            # with self.task_lock:
-            # for task in get_actual_tasks():
-            #     print(task)
+            time.sleep(0.3)
 
-        #     now = datetime.now()
-        #     current_time = now.strftime("%H:%M")
-        #     ipNextTurn = sql_conn.get_next_ip_addr()
-        #
-        #     ipNextTime = int(ipNextTurn.next_run)
-        #     ipAddrNextTurn = ipNextTurn.ip_addr
-        #     ipFreqNextTurn = ipNextTurn.freq
-        #
-        #     if(ipNextTime < time.time()):
-        #         execute_task_new(ipAddrNextTurn, ipFreqNextTurn)
-            time.sleep(3)
-
-
-def ping(address):
+def get_response_ping(address):
     """Convert None values to -1."""
     result = ping3.ping(address)
 
     if type(result) == float:
-        return_text = result
+        return ms_time(result)
     else:
-        return_text = -1
-
-    return return_text
+        return -1
 
 
-def get_granularity(granularity):
-    """Convert frequencies to seconds."""
-    freqs = {
-        "H": 60 * 60,
-        "M": 60,
-        "S": 1,
-        "D": 24 * 60 * 60,
-    }
-    number, letter = int(granularity[:-1]), granularity[-1].upper()
-    return number * freqs[letter]
-
-def execute_task_new(address, freq):
-    """Assign a new thread to the new task."""
-    sql_conn.set_next_time_buffer(address) #security buffer, in thread will be rewritten
-    threading.Thread(target=execute_thread, args=('ping',address,freq), daemon=True).start()
 
 
-def execute_thread(task_type, address, freq):
-    """Execute task by thread.
-    Keyword arguments:
-    task_type -- the type of task (currently only ping)
-    address -- the url or IP address
-    """
-    if task_type == "ping":
-        response = {
-            "type": task_type,
-            "address": address,
-            "time": int(time.time()),
-            "nextTime": int(time.time()) + get_granularity(freq),
-            "value": ping(address)
-        }
-    else:
-        pass
-    response_queue.put(response)
