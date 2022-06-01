@@ -3,10 +3,13 @@ Fast api setup and routes for datastore.
 """
 from typing import Optional
 from fastapi import Request, FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from modules.datastore.sql_connector import DatastoreSqlConnector
-
 from settings import TESTING
+
+from modules.datastore import old_report
 
 
 sql_conn = DatastoreSqlConnector()
@@ -56,3 +59,23 @@ def get_worker_tasks(worker):
 async def sync_worker(request: Request):
     data = await request.json()
     return sql_conn.sync_worker(data)
+
+
+@app.get("/report", response_class=HTMLResponse)
+async def make_report():
+    worker = "default"
+    responses = sql_conn.get_responses(worker=worker)
+
+    df = old_report.responses2df(responses)
+
+    html_content = []
+    html_content += old_report.get_histogram(df)
+    html_content += old_report.get_linear(df)
+    html_content += old_report.get_bar(df)
+
+    html_str = "\n".join(html_content)
+
+    return HTMLResponse(content=html_str, status_code=200)
+
+
+app.mount("/media", StaticFiles(directory="media"), name="media")

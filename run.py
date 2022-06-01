@@ -22,7 +22,7 @@ def run_storage_app(address, port):
     start the storage application with uvicorn
     """
     uvicorn.run("modules.datastore.main:app", host=address,
-                port=port, log_level="critical")
+                port=port, log_level="debug") # TODO critical log level in production maybe
 
 def run_storage_app_process(address, port):
     """

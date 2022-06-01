@@ -116,3 +116,10 @@ class DatastoreSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             session.query(Task).delete()
             session.query(Response).delete()
+
+    def get_responses(self, worker=False):
+        with self.sessions.begin() as session:
+            query = session.query(Response).filter(Response.task == "ping")
+            if worker:
+                query.filter(Response.worker == worker)
+            return [item.__dict__ for item in query.all()] # TODO custom function
