@@ -6,11 +6,14 @@ import unittest
 import pathlib
 import time
 
-from run import run_worker_app_process
+# from run import run_worker_app_process
 from modules.worker.sql_connector import WorkerSqlConnector
-from modules.worker.main import Worker
+# from modules.worker.main import Worker
 
 class TestingWorker(unittest.TestCase):
+    """
+    Tests related to Worker.
+    """
 
     datapath = pathlib.PurePath("tests", "test_worker.json")
     with open(datapath, "r", encoding="utf-8") as f:

@@ -9,29 +9,15 @@ This script requires that `matplotlib`, `pandas`, `scipy` and
 running this script in.
 
 """
-
-import json
-import os
 from pathlib import Path
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import optimize
-import webbrowser
-
-# from storages.engines import get_reader_engine
-#
-#
-#
-# def convert_xlsx2csv(source, target):
-#     """ Convert excel file to csv. """
-#     pd.read_excel(source).to_csv(target, index=False)
-
 
 def responses2df(responses):
     return pd.DataFrame(responses, columns=['ip_address', 'time', 'value'])
-
 
 def get_histogram(df):
     """Following function plots a Histogram representing the distribution
