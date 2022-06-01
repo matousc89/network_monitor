@@ -1,9 +1,6 @@
 """
 takes care of the connection to the database
 """
-import logging
-import time
-
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
 

@@ -40,11 +40,9 @@ if 'unittest' in sys.modules.keys():
 
 ## Calculated part
 
-
 for folder_path in [DATABASE_FOLDER, LOG_FOLDER]:
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-
 
 
 DATASTORE_APP_URL = build_url(*DATASTORE_APP_ADDRESS)

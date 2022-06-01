@@ -89,8 +89,3 @@ class Worker():
                 elif task["next_run"] - ms_time(2) < now:
                     self.__execute_task(copy.deepcopy(task))
             ms_sleep(500)
-
-
-
-
-
