@@ -25,7 +25,7 @@ class BaseTask(BaseItem):
     """
     __tablename__ = 'tasks'
 
-    frequency = Column(Integer)
-    last_run = Column(Integer)
+    frequency = Column(String(5))
+    last_run = Column(Integer, default=0)
 
 

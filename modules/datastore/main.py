@@ -27,7 +27,7 @@ def get_avrg_response(date_from: Optional[str] = None, date_to: Optional[str] = 
         generate JSON of average response time of each ip addresses,
         dateFrom and dateTo are optional
     """
-    # TODO why the address is not selectable?
+    # TODO why the address and worker is not selectable?
     return sql_conn.get_avrg_response_all(date_from, date_to)
 
 @app.get("/getAddressInfo")

@@ -10,5 +10,14 @@
       "frequency": "5S",
       "task": "ping"
     }
+  ],
+  "responses": [
+    {
+      "ip_address": "www.google.com",
+      "task": "ping",
+      "value": 100,
+      "time": 1654082051000,
+      "synced": false
+    }
   ]
 }

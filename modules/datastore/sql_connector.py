@@ -1,14 +1,11 @@
 """
 takes care of the connection to the database
 """
-import logging
-
 from sqlalchemy.sql import func
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
 
 from settings import DATASTORE_DATABASE
-from settings import LOG
 from modules.datastore.models import Response, Task
 from modules.datastore.models import make_tables
 from modules.sql_connector import CommonSqlConnector
@@ -20,9 +17,8 @@ class DatastoreSqlConnector(CommonSqlConnector):
 
     def __init__(self):
         """
-        Init the sql connector (connect, prepare tables, setup logging).
+        Init the sql connector (connect, prepare tables).
         """
-        logging.basicConfig(filename=LOG, encoding='utf-8', level=logging.DEBUG)
         engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=False)
         make_tables(engine)
         self.sessions = sessionmaker(engine)

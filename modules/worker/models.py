@@ -26,7 +26,7 @@ class Task(BaseTask, Base):
     Definition of task.
     """
     active = Column(Integer)
-    next_run = Column(Integer)
+    next_run = Column(Integer, default=0)
 
     def values(self):
         return {
