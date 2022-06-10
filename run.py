@@ -1,5 +1,10 @@
 """
 This is the main script that starts everything.
+
+TODO: nice to have feature: export responses from database
+TODO: page with statuses of pages that are traced
+TODO: response value should be string?
+TODO: datastore should have table for server informations (gps, name, etc.)
 """
 from multiprocessing import Process
 import time

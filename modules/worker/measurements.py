@@ -8,7 +8,7 @@ def get_response_ping(address):
     """
     result = ping3.ping(address)
 
-    if type(result) == float:
+    if isinstance(result, float):
         return ms_time(result)
     else:
         return -1

@@ -8,4 +8,3 @@ class CommonSqlConnector():
     Common sql operations.
     """
     pass
-

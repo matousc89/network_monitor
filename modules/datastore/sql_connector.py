@@ -6,7 +6,7 @@ import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
 
 from settings import DATASTORE_DATABASE
-from modules.datastore.models import Response, Task
+from modules.datastore.models import Response, Task, Address
 from modules.datastore.models import make_tables
 from modules.sql_connector import CommonSqlConnector
 
@@ -59,10 +59,11 @@ class DatastoreSqlConnector(CommonSqlConnector):
                 outcome.append({"address": address, "value": int(value)})
         return outcome
 
-    def get_address_info(self, time_from=False, time_to=False):
+    def get_response_summary(self, time_from=False, time_to=False):
         """
             get info is detailed list of addresses (generate: number of addr records,
             first time testing, last time testing and average responsing time)
+            # TODO filter by worker and task
         """
         outcome = []
         with self.sessions.begin() as session:
@@ -116,10 +117,57 @@ class DatastoreSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             session.query(Task).delete()
             session.query(Response).delete()
+            session.query(Address).delete()
 
-    def get_responses(self, worker=False):
+    def get_responses(self, worker=False, task="ping"):
+        """
+        Return list of responses.
+        """
         with self.sessions.begin() as session:
-            query = session.query(Response).filter(Response.task == "ping")
+            query = session.query(Response).filter(Response.task == task)
             if worker:
                 query.filter(Response.worker == worker)
             return [item.__dict__ for item in query.all()] # TODO custom function
+
+    def update_address(self, address_data):
+        """
+        Update address. If address does not exist, create it.
+        """
+        with self.sessions.begin() as session:
+            address = session.query(Address).filter(Address.ip_address == address_data["ip_address"]).first()
+            if address is None:
+                address = Address(
+                    ip_address=address_data["ip_address"],
+                )
+                session.add(address)
+                status = {"status": "Created"}
+            else:
+                status = {"status": "Updated"}
+            data_keys = ["location", "latitude", "longitude", "note"]
+            for key in data_keys:
+                if key in address_data:
+                    setattr(address, key, address_data[key])
+            return status
+
+    def delete_address(self, address_data):
+        """
+        Delete address if exists - according ip address
+        """
+        with self.sessions.begin() as session:
+            address = session.query(Address).filter(Address.ip_address == address_data["ip_address"]).first()
+            if address is None:
+                return {"status": "Not found"}
+            else:
+                session.delete(address)
+                return {"status": "Deleted"}
+
+    def get_address(self, ip_address):
+        """
+        Get information about IP address
+        """
+        with self.sessions.begin() as session:
+            address = session.query(Address).filter(Address.ip_address == ip_address).first()
+            if address is None:
+                return {"status": "Not found"}
+            else:
+                return {"status": "Ok", "data": address.values()}

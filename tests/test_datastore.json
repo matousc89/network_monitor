@@ -1,4 +1,14 @@
 {
+  "addresses": [
+    {
+      "ip_address": "ut1-time.colorado.edu",
+      "name": "NIST Internet Time Server",
+      "location": "Boulder",
+      "latitude": 40.014984,
+      "longitude": -105.270546,
+      "note": ""
+    }
+  ],
   "responses": [
     {
       "ip_address": "100.100.100.102",

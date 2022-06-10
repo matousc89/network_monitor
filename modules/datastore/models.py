@@ -1,7 +1,7 @@
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, String, Float
 
-from modules.models import BaseTask, BaseResponse
+from modules.models import BaseTask, BaseResponse, BaseItem
 
 Base = declarative_base()
 
@@ -17,6 +17,32 @@ class Task(BaseTask, Base):
     Definition of task.
     """
     worker = Column(String(100))
+
+
+class Address(BaseItem, Base):
+    """
+    IP address meta data
+    """
+    __tablename__ = 'addresses'
+
+    name = Column(String(100))
+    location = Column(String(100))
+    latitude = Column(Float)
+    longitude = Column(Float)
+    note = Column(String(500))
+
+    def values(self):
+        """
+        Return values for api client.
+        """
+        return {
+            "ip_address": self.ip_address,
+            "name": self.name,
+            "location": self.location,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "note": self.note,
+        }
 
 
 def make_tables(engine):

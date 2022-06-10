@@ -4,6 +4,7 @@ Tests related to datastore
 import json
 import unittest
 import pathlib
+import time
 
 import requests
 
@@ -24,6 +25,7 @@ class TestingDatastore(unittest.TestCase):
     def setUpClass(cls):
         """Start server for testing"""
         cls.proc = run_storage_app_process(*DATASTORE_APP_ADDRESS)
+        time.sleep(1) # TODO make sure it runs in better way
 
     @classmethod
     def tearDownClass(cls):
@@ -63,9 +65,52 @@ class TestingDatastore(unittest.TestCase):
         """
         Test address report. Should return correct number of records.
         """
-        url = build_url(*DATASTORE_APP_ADDRESS, slug="getAddressInfo")
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="getResponseSummary")
         params = {
             "time_from": 100,
         }
         returned_data = requests.get(url, params=params).json()
         self.assertEqual(len(returned_data), 3)
+
+    def test100_update_address(self):
+        """
+        Add address in database
+        """
+        params = self.data["addresses"][0]
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="updateAddress")
+        returned_data = requests.post(url, json=params).json()
+        self.assertEqual(returned_data["status"], "Created")
+
+    def test110_update_address(self):
+        """
+        Update address in database
+        """
+        params = self.data["addresses"][0]
+        params["note"] = "test"
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="updateAddress")
+        returned_data = requests.post(url, json=params).json()
+        self.assertEqual(returned_data["status"], "Updated")
+
+    def test120_get_address_ok(self):
+        params = self.data["addresses"][0]
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="getAddress")
+        returned_data = requests.get(url, params=params).json()
+        self.assertEqual(returned_data["data"]["ip_address"], params["ip_address"])
+
+    def test121_get_address_fail(self):
+        params = {"ip_address": "this.do.not.exist"}
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="getAddress")
+        returned_data = requests.get(url, params=params).json()
+        self.assertEqual(returned_data["status"], "Not found")
+
+    def test130_delete_address_fail(self):
+        params = {"ip_address": "this.do.not.exist"}
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="deleteAddress")
+        returned_data = requests.post(url, json=params).json()
+        self.assertEqual(returned_data["status"], "Not found")
+
+    def test131_delete_address_ok(self):
+        params = self.data["addresses"][0]
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="deleteAddress")
+        returned_data = requests.post(url, json=params).json()
+        self.assertEqual(returned_data["status"], "Deleted")
