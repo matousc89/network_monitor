@@ -61,7 +61,7 @@ class TestingDatastore(unittest.TestCase):
                 value = float(item.get("value", -1))
         self.assertEqual(value, 40)
 
-    def test030_get_address_info(self):
+    def test030_get_response_summary(self):
         """
         Test address report. Should return correct number of records.
         """
@@ -70,7 +70,7 @@ class TestingDatastore(unittest.TestCase):
             "time_from": 100,
         }
         returned_data = requests.get(url, params=params).json()
-        self.assertEqual(len(returned_data), 3)
+        self.assertEqual(len(returned_data["data"]), 3)
 
     def test100_update_address(self):
         """
@@ -102,6 +102,11 @@ class TestingDatastore(unittest.TestCase):
         url = build_url(*DATASTORE_APP_ADDRESS, slug="getAddress")
         returned_data = requests.get(url, params=params).json()
         self.assertEqual(returned_data["status"], "Not found")
+
+    def test122_get_all_addresses(self):
+        url = build_url(*DATASTORE_APP_ADDRESS, slug="getAllAddresses")
+        returned_data = requests.get(url).json()
+        self.assertEqual(len(returned_data["data"]), 1)
 
     def test130_delete_address_fail(self):
         params = {"ip_address": "this.do.not.exist"}

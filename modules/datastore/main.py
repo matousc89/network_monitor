@@ -33,11 +33,11 @@ def get_avrg_response(date_from: Optional[str] = None, date_to: Optional[str] = 
     return sql_conn.get_avrg_response_all(date_from, date_to)
 
 @app.get("/getResponseSummary")
-def get_address_info(time_from: Optional[str] = None, time_to: Optional[str] = None):
+def get_response_summary(worker=False, time_from: Optional[str] = None, time_to: Optional[str] = None):
     """
     get info is detailed list of addresses (generate: number of addr records,
     first time testing, last time testing and average responsing time)"""
-    return sql_conn.get_response_summary(time_from, time_to)
+    return sql_conn.get_response_summary(worker, time_from, time_to)
 
 @app.get("/addResponse")
 def add_response(ip_address, time, value, task, worker):
@@ -60,6 +60,16 @@ def get_worker_tasks(worker):
     Return tasks for given worker
     """
     return sql_conn.get_worker_tasks(worker)
+
+@app.get("/getAllAddresses")
+def get_worker_tasks():
+    """
+    Get all addresses
+    """
+    return sql_conn.get_all_addresses()
+
+
+
 
 @app.get("/getAddress")
 def get_worker_tasks(ip_address):
@@ -112,5 +122,32 @@ async def make_report():
     html_str = "\n".join(html_content)
 
     return HTMLResponse(content=html_str, status_code=200)
+
+
+@app.get("/map", response_class=HTMLResponse)
+async def make_map(latitude=50.0755, longitude=14.4378):
+    """
+    Create a folium map.
+    use as: http://127.0.0.1:8000/map?longitude=200&latitude=10
+
+    TODO: it should be worker latitude and longitude
+    TODO: maybe join sql request instead of manual joining
+    """
+    worker = "default"
+    annotated_addresses = sql_conn.get_all_addresses()
+    address_summaries = sql_conn.get_response_summary(worker=worker)
+
+    addresses = []
+    for address in annotated_addresses["data"]:
+        for summary in address_summaries["data"]:
+            if address["ip_address"] == summary["ip_address"]:
+                address.update(summary)
+                addresses.append(address)
+
+    html_str = old_report.get_map(addresses, latitude, longitude)
+
+    return HTMLResponse(content=html_str, status_code=200)
+
+
 
 app.mount("/media", StaticFiles(directory="media"), name="media")

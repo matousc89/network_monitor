@@ -219,80 +219,61 @@ def get_warning_color(value):
 
 # # TODO should be refactored when table of server information exists
 # server_info = config["server_info"]
-# map_settings = config["map_settings"]
+
 # warning_colors = map_settings["warning_colors"]
 # default_color = map_settings["default_color"]
-# user_lat = float(map_settings["user_latitude"])
-# user_lon = float(map_settings["user_longitude"])
-# user_city = map_settings["user_location"]
 # round_digits = int(map_settings["round_digits"])
 # OPEN_BROWSER = map_settings["open_browser"]
 #
-#
-# def get_map(data):
-#
-#     # making the map, center according to users location
-#     my_map = folium.Map(
-#         location=(user_lat, user_lon),
-#         zoom_start=2,
-#         max_bounds=True,
-#         min_zoom=2
-#     )
-#     # showing users location with a gray marker
-#     folium.Marker(
-#         location=(user_lat, user_lon),
-#         popup=user_city,
-#         tooltip="User",
-#         icon=folium.Icon(prefix="fa", icon="circle", color="gray")
-#     ).add_to(my_map)
-#
-#     for address, values in server_info.items():
-#         city = values["location"]
-#         latitude = values["latitude"]
-#         longitude = values["longitude"]
-#         subset = data[data["address"] == address]
-#
-#         if subset.empty:
-#             continue
-#
-#         last_ping = round(subset["value"].iloc[-1], round_digits)
-#         average_ping = round(subset["value"].median(), round_digits)
-#
-#         tooltip = """
-#         <table>
-#           <tr>
-#             <td>Address:</td>
-#             <td><b>{}</b></td>
-#           </tr>
-#           <tr>
-#             <td>Last ping:</td>
-#             <td><b>{}</b></td>
-#           </tr>
-#           <tr>
-#             <td>Median ping:</td>
-#             <td><b>{}</b></td>
-#           </tr>
-#         </table>
-#         """.format(address, last_ping, average_ping)
-#
-#         folium.Marker(
-#             location=(latitude, longitude),
-#             popup=city,
-#             tooltip=tooltip,
-#             icon=folium.Icon(prefix="fa", icon="circle")
-#         ).add_to(my_map)
-#
-#         folium.PolyLine(locations=[(user_lat, user_lon), (latitude, longitude)],
-#                         color=get_warning_color(average_ping),
-#                         weight=2,
-#                         opacity=0.7).add_to(my_map)
-#
-#     def open_local_file():
-#         """Opening the html file in a browser."""
-#         webbrowser.open('file://' + os.path.realpath("my_map.html"))
-#
-#     my_map.save("my_map.html")
-#
+
+def get_map(data, user_lat, user_lon):
+    # making the map, center according to users location
+    my_map = folium.Map(
+        location=(user_lat, user_lon),
+        zoom_start=2,
+        max_bounds=True,
+        min_zoom=2
+    )
+
+    folium.Marker(
+        location=(user_lat, user_lon),
+        tooltip="User",
+        icon=folium.Icon(prefix="fa", icon="circle", color="gray")
+    ).add_to(my_map)
+
+    for values in data:
+        city = values["location"]
+        latitude = values["latitude"]
+        longitude = values["longitude"]
+        average_ping = round(values["average"], 2)
+        address = values["ip_address"]
+
+        tooltip = """
+        <table>
+          <tr>
+            <td>Address:</td>
+            <td><b>{}</b></td>
+          </tr>
+          <tr>
+            <td>Median ping:</td>
+            <td><b>{}</b></td>
+          </tr>
+        </table>
+        """.format(address, average_ping)
+
+        folium.Marker(
+            location=(latitude, longitude),
+            popup=city,
+            tooltip=tooltip,
+            icon=folium.Icon(prefix="fa", icon="circle")
+        ).add_to(my_map)
+
+        folium.PolyLine(locations=[(float(user_lat), float(user_lon)), (float(latitude), float(longitude))],
+                        color=get_warning_color(average_ping),
+                        weight=2,
+                        opacity=0.7).add_to(my_map)
+
+    return my_map._repr_html_()
 
 
 

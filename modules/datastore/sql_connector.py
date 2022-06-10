@@ -23,13 +23,13 @@ class DatastoreSqlConnector(CommonSqlConnector):
         make_tables(engine)
         self.sessions = sessionmaker(engine)
 
-    def get_all_addr(self):
-        """
-        Get all unique addresses
-        """
-        with self.sessions.begin() as session:
-            result = list(session.query(Response.ip_address).distinct())
-        return result
+    # def get_all_addr(self):
+    #     """
+    #     Get all unique addresses
+    #     """
+    #     with self.sessions.begin() as session:
+    #         result = list(session.query(Response.ip_address).distinct())
+    #     return result
 
     def add_response(self, ip_address, time, value, task, worker):
         """
@@ -59,7 +59,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
                 outcome.append({"address": address, "value": int(value)})
         return outcome
 
-    def get_response_summary(self, time_from=False, time_to=False):
+    def get_response_summary(self, worker=False, time_from=False, time_to=False):
         """
             get info is detailed list of addresses (generate: number of addr records,
             first time testing, last time testing and average responsing time)
@@ -70,18 +70,20 @@ class DatastoreSqlConnector(CommonSqlConnector):
             for item in session.query(Response.ip_address).distinct():
                 address = item[0]
                 query = session.query(Response).filter(Response.ip_address == address)
+                if worker:
+                    query = query.filter(Response.worker == worker)
                 if time_from:
                     query = query.filter(Response.time > time_from)
                 if time_to:
                     query = query.filter(Response.time < time_to)
                 outcome.append({
-                    "address": address,
+                    "ip_address": address,
                     "first_response": query.order_by(Response.time).first().time,
                     "last_response": query.order_by(Response.time.desc()).first().time,
                     "average": query.with_entities(func.avg(Response.value)).one()[0],
                     "count": query.count()
                 })
-        return outcome
+        return {"status": "Ok", "data": outcome}
 
     def get_worker_tasks(self, worker):
         """
@@ -171,3 +173,22 @@ class DatastoreSqlConnector(CommonSqlConnector):
                 return {"status": "Not found"}
             else:
                 return {"status": "Ok", "data": address.values()}
+
+    def get_address(self, ip_address):
+        """
+        Get information about IP address
+        """
+        with self.sessions.begin() as session:
+            address = session.query(Address).filter(Address.ip_address == ip_address).first()
+            if address is None:
+                return {"status": "Not found"}
+            else:
+                return {"status": "Ok", "data": address.values()}
+
+    def get_all_addresses(self):
+        """
+        Return all addresses
+        """
+        with self.sessions.begin() as session:
+            query = session.query(Address)
+            return {"status": "Ok", "data": [item.values() for item in query.all()]}
