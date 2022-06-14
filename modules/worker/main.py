@@ -38,10 +38,10 @@ class Worker():
             }
             try:
                 tasks = requests.post(self.datastore_url, json=payload).json()
+                self.sql_conn.postsync(tasks, responses)
             except requests.exceptions.RequestException as e:
                 logging.critical("Cannot contact datastore - {}".format(str(e)))
-                tasks = []
-            self.sql_conn.postsync(tasks, responses)
+                self.sql_conn.postsync([], [])
             time.sleep(3)
 
     def __execute_task(self, task):

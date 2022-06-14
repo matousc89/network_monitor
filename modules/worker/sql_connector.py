@@ -20,7 +20,7 @@ class WorkerSqlConnector(CommonSqlConnector):
         Init the sql connector (connect, prepare tables).
         """
         self.worker = worker
-        engine = db.create_engine('sqlite:///{}'.format(WORKER_DATABASE), echo=False)
+        engine = db.create_engine(f'sqlite:///{WORKER_DATABASE}', echo=False)
         make_tables(engine)
         self.sessions = sessionmaker(engine)
 
@@ -91,10 +91,11 @@ class WorkerSqlConnector(CommonSqlConnector):
         Responses are marked as synced.
         """
         active_stamp = ms_time()
-        id_list = [item["id"] for item in responses]
         with self.sessions.begin() as session:
-            session.query(Response).filter(
-                Response.id.in_(id_list)).update({Response.synced: True})
+            if responses:
+                id_list = [item["id"] for item in responses]
+                session.query(Response).filter(
+                    Response.id.in_(id_list)).update({Response.synced: True})
 
             for incoming_task in tasks:
                 existing_task = session.query(Task).filter(

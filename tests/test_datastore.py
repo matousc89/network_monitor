@@ -25,7 +25,7 @@ class TestingDatastore(unittest.TestCase):
     def setUpClass(cls):
         """Start server for testing"""
         cls.proc = run_storage_app_process(*DATASTORE_APP_ADDRESS)
-        time.sleep(1) # TODO make sure it runs in better way
+        time.sleep(2) # TODO make sure it runs in better way
 
     @classmethod
     def tearDownClass(cls):
