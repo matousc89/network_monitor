@@ -28,16 +28,16 @@ class DatastoreSqlConnector(CommonSqlConnector):
     #     Get all unique addresses
     #     """
     #     with self.sessions.begin() as session:
-    #         result = list(session.query(Response.ip_address).distinct())
+    #         result = list(session.query(Response.address).distinct())
     #     return result
 
-    def add_response(self, ip_address, time, value, task, worker):
+    def add_response(self, address, time, value, task, worker):
         """
         write response of tested address to db
         """ # TODO update last time of task
         # TODO obsolete since worker sync
         result = Response(
-            ip_address=ip_address,
+            address=address,
             time=int(time),
             value=int(value),
             task=task,
@@ -52,10 +52,10 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """ # TODO time selection
         outcome = []
         with self.sessions.begin() as session:
-            for item in session.query(Response.ip_address).distinct():
+            for item in session.query(Response.address).distinct():
                 address = item[0]
                 # TODO optimize query
-                value = session.query(func.avg(Response.value)).filter(Response.ip_address == address).one()[0]
+                value = session.query(func.avg(Response.value)).filter(Response.address == address).one()[0]
                 outcome.append({"address": address, "value": int(value)})
         return outcome
 
@@ -67,9 +67,9 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         outcome = []
         with self.sessions.begin() as session:
-            for item in session.query(Response.ip_address).distinct():
+            for item in session.query(Response.address).distinct():
                 address = item[0]
-                query = session.query(Response).filter(Response.ip_address == address)
+                query = session.query(Response).filter(Response.address == address)
                 if worker:
                     query = query.filter(Response.worker == worker)
                 if time_from:
@@ -77,7 +77,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
                 if time_to:
                     query = query.filter(Response.time < time_to)
                 outcome.append({
-                    "ip_address": address,
+                    "address": address,
                     "first_response": query.order_by(Response.time).first().time,
                     "last_response": query.order_by(Response.time.desc()).first().time,
                     "average": query.with_entities(func.avg(Response.value)).one()[0],
@@ -100,7 +100,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             for response in data["responses"]:
                 result = Response(
-                    ip_address=response["ip_address"],
+                    address=response["address"],
                     time=response["time"],
                     value=response["value"],
                     task=response["task"],
@@ -136,10 +136,10 @@ class DatastoreSqlConnector(CommonSqlConnector):
         Update address. If address does not exist, create it.
         """
         with self.sessions.begin() as session:
-            address = session.query(Address).filter(Address.ip_address == address_data["ip_address"]).first()
+            address = session.query(Address).filter(Address.address == address_data["address"]).first()
             if address is None:
                 address = Address(
-                    ip_address=address_data["ip_address"],
+                    address=address_data["address"],
                 )
                 session.add(address)
                 status = {"status": "Created"}
@@ -156,30 +156,30 @@ class DatastoreSqlConnector(CommonSqlConnector):
         Delete address if exists - according ip address
         """
         with self.sessions.begin() as session:
-            address = session.query(Address).filter(Address.ip_address == address_data["ip_address"]).first()
+            address = session.query(Address).filter(Address.address == address_data["address"]).first()
             if address is None:
                 return {"status": "Not found"}
             else:
                 session.delete(address)
                 return {"status": "Deleted"}
 
-    def get_address(self, ip_address):
+    def get_address(self, address):
         """
         Get information about IP address
         """
         with self.sessions.begin() as session:
-            address = session.query(Address).filter(Address.ip_address == ip_address).first()
+            address = session.query(Address).filter(Address.address == address).first()
             if address is None:
                 return {"status": "Not found"}
             else:
                 return {"status": "Ok", "data": address.values()}
 
-    def get_address(self, ip_address):
+    def get_address(self, address):
         """
         Get information about IP address
         """
         with self.sessions.begin() as session:
-            address = session.query(Address).filter(Address.ip_address == ip_address).first()
+            address = session.query(Address).filter(Address.address == address).first()
             if address is None:
                 return {"status": "Not found"}
             else:

@@ -37,7 +37,7 @@ class WorkerSqlConnector(CommonSqlConnector):
         """
         with self.sessions.begin() as session:
             task = session.query(Task).filter(
-                Task.ip_address == task_data["ip_address"],
+                Task.address == task_data["address"],
                 Task.task == task_data["task"]
             ).first()
             task.next_run = task_data["next_run"]
@@ -56,7 +56,7 @@ class WorkerSqlConnector(CommonSqlConnector):
         write response of tested address to database
         """
         result = Response(
-            ip_address=response["ip_address"],
+            address=response["address"],
             time=response["time"],
             value=response["value"],
             task=response["task"],
@@ -99,7 +99,7 @@ class WorkerSqlConnector(CommonSqlConnector):
 
             for incoming_task in tasks:
                 existing_task = session.query(Task).filter(
-                    Task.ip_address == incoming_task["ip_address"],
+                    Task.address == incoming_task["address"],
                     Task.task == incoming_task["task"]
                 ).first()
                 if existing_task is not None:
@@ -107,7 +107,7 @@ class WorkerSqlConnector(CommonSqlConnector):
                     existing_task.active = active_stamp
                 else:
                     new_task = Task(
-                        ip_address=incoming_task["ip_address"],
+                        address=incoming_task["address"],
                         task=incoming_task["task"],
                         frequency=incoming_task["frequency"],
                         active=active_stamp,

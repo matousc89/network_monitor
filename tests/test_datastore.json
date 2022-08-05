@@ -1,7 +1,7 @@
 {
   "addresses": [
     {
-      "ip_address": "ut1-time.colorado.edu",
+      "address": "ut1-time.colorado.edu",
       "name": "NIST Internet Time Server",
       "location": "Boulder",
       "latitude": 40.014984,
@@ -11,28 +11,28 @@
   ],
   "responses": [
     {
-      "ip_address": "100.100.100.102",
+      "address": "100.100.100.102",
       "time": 1653600000,
       "value": 37,
       "task": "ping",
       "worker": "home1"
     },
     {
-      "ip_address": "100.100.100.102",
+      "address": "100.100.100.102",
       "time": 1653500000,
       "value": 43,
       "task": "ping",
       "worker": "home1"
     },
     {
-      "ip_address": "www.example.com",
+      "address": "www.example.com",
       "time": 1653600001,
       "value": 37,
       "task": "ping",
       "worker": "home1"
     },
     {
-      "ip_address": "100.100.100.100",
+      "address": "100.100.100.100",
       "time": 1653400000,
       "value": 150,
       "task": "ping",

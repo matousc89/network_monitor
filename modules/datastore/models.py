@@ -41,7 +41,7 @@ class Address(BaseItem, Base):
         Return values for api client.
         """
         return {
-            "ip_address": self.ip_address,
+            "address": self.address,
             "name": self.name,
             "location": self.location,
             "latitude": self.latitude,

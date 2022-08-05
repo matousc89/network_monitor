@@ -65,7 +65,7 @@ class Worker():
         self.sql_conn.update_task(task)
         ms_sleep(wait_time)
         if task["task"] == "ping":
-            task["value"] = get_response_ping(task["ip_address"])
+            task["value"] = get_response_ping(task["address"])
         else:
             logging.warning("Unknown task type: {}".format(task["task"]))
             return

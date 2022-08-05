@@ -95,10 +95,10 @@ class TestingDatastore(unittest.TestCase):
         params = self.data["addresses"][0]
         url = build_url(*DATASTORE_APP_ADDRESS, slug="getAddress")
         returned_data = requests.get(url, params=params).json()
-        self.assertEqual(returned_data["data"]["ip_address"], params["ip_address"])
+        self.assertEqual(returned_data["data"]["address"], params["address"])
 
     def test121_get_address_fail(self):
-        params = {"ip_address": "this.do.not.exist"}
+        params = {"address": "this.do.not.exist"}
         url = build_url(*DATASTORE_APP_ADDRESS, slug="getAddress")
         returned_data = requests.get(url, params=params).json()
         self.assertEqual(returned_data["status"], "Not found")
@@ -109,7 +109,7 @@ class TestingDatastore(unittest.TestCase):
         self.assertEqual(len(returned_data["data"]), 1)
 
     def test130_delete_address_fail(self):
-        params = {"ip_address": "this.do.not.exist"}
+        params = {"address": "this.do.not.exist"}
         url = build_url(*DATASTORE_APP_ADDRESS, slug="deleteAddress")
         returned_data = requests.post(url, json=params).json()
         self.assertEqual(returned_data["status"], "Not found")

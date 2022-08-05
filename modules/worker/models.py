@@ -14,7 +14,7 @@ class Response(BaseResponse, Base):
     def sync_values(self):
         return {
             "id": self.id,
-            "ip_address": self.ip_address,
+            "address": self.address,
             "task": self.task,
             "time": self.time,
             "value": self.value
@@ -30,7 +30,7 @@ class Task(BaseTask, Base):
 
     def values(self):
         return {
-            "ip_address": self.ip_address,
+            "address": self.address,
             "active": self.active,
             "frequency": self.frequency,
             "task": self.task,

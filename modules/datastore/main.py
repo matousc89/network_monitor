@@ -40,11 +40,11 @@ def get_response_summary(worker=False, time_from: Optional[str] = None, time_to:
     return sql_conn.get_response_summary(worker, time_from, time_to)
 
 @app.get("/addResponse")
-def add_response(ip_address, time, value, task, worker):
+def add_response(address, time, value, task, worker):
     """
     create new row (response) into db
     """
-    sql_conn.add_response(ip_address, time, value, task, worker)
+    sql_conn.add_response(address, time, value, task, worker)
     return {"status": True}
 
 @app.get("/getWorkerTasks")
@@ -54,7 +54,7 @@ def get_worker_tasks(worker):
     """
     return sql_conn.get_worker_tasks(worker)
 
-@app.get("/getWorkerTasks")
+@app.get("/getWorkerTasks") # TODO why twice?
 def get_worker_tasks(worker):
     """
     Return tasks for given worker
@@ -71,12 +71,12 @@ def get_worker_tasks():
 
 
 
-@app.get("/getAddress")
-def get_worker_tasks(ip_address):
+@app.get("/getAddress") # TODO ?
+def get_worker_tasks(address):
     """
     Delete address specified in request provided data
     """
-    return sql_conn.get_address(ip_address)
+    return sql_conn.get_address(address)
 
 @app.post("/updateAddress")
 async def update_address(request: Request):
@@ -140,7 +140,7 @@ async def make_map(latitude=50.0755, longitude=14.4378):
     addresses = []
     for address in annotated_addresses["data"]:
         for summary in address_summaries["data"]:
-            if address["ip_address"] == summary["ip_address"]:
+            if address["address"] == summary["address"]:
                 address.update(summary)
                 addresses.append(address)
 

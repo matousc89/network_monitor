@@ -5,7 +5,7 @@ class BaseItem():
     Attributes common for Response and Task.
     """
     id = Column(Integer, primary_key=True)
-    ip_address = Column(String(100))
+    address = Column(String(100))
 
 
 class BaseResponse(BaseItem):

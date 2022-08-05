@@ -15,7 +15,7 @@ from scipy import optimize
 import folium
 
 def responses2df(responses):
-    return pd.DataFrame(responses, columns=['ip_address', 'time', 'value'])
+    return pd.DataFrame(responses, columns=['address', 'time', 'value'])
 
 def get_histogram(df):
     """Following function plots a Histogram representing the distribution
@@ -25,12 +25,12 @@ def get_histogram(df):
 
     filename = "Histogram_of_"
     df.sort_values(
-        by=["ip_address", "value"]
+        by=["address", "value"]
     )
 
-    for address in df["ip_address"].unique():
+    for address in df["address"].unique():
         df1 = df[df["value"] > 0]
-        subset = df1[df1["ip_address"] == address]
+        subset = df1[df1["address"] == address]
         subset = subset[subset["value"] < subset["value"].quantile(hist_outlier)]
 
         if len(subset) > hist_const:
@@ -39,7 +39,7 @@ def get_histogram(df):
                                   histtype='step'
                                   )
 
-    plt.legend(df1["ip_address"])
+    plt.legend(df1["address"])
     plt.xlabel("Ping Values [s]")
     plt.ylabel("Number of occurrences")
     plt.title("Distribution of Ping Values")
@@ -54,9 +54,9 @@ def get_histogram(df):
     """.format(path, filename, "addresses"))
 
 
-    for address in df["ip_address"].unique():
+    for address in df["address"].unique():
 
-        subset_all = df[df["ip_address"] == address]
+        subset_all = df[df["address"] == address]
         count_all = subset_all['value'].shape[0]  # not working
         count_online = subset_all[subset_all["value"] > 0].shape[0]  # not working
         subset = subset_all[0 < subset_all["value"]]
@@ -92,7 +92,7 @@ def get_linear(df):
 
     filename = "Linear_of_"
     df.sort_values(
-        by=["ip_address", "value"]
+        by=["address", "value"]
     )
 
     df1 = df[df["value"] > 0]
@@ -125,9 +125,9 @@ def get_linear(df):
     """.format(path, filename, i))
 
 
-    for address in df["ip_address"].unique():
+    for address in df["address"].unique():
         df1 = df[df["value"] > 0]
-        subset = df1[df1["ip_address"] == address]
+        subset = df1[df1["address"] == address]
         x = subset.index
         y = subset['value']
         if len(x) > lin_const:
@@ -163,11 +163,11 @@ def get_bar(df):
 
     filename = "Bar_chart"
     df.sort_values(
-        by=["ip_address", "value"]
+        by=["address", "value"]
     )
-    for address in df["ip_address"].unique():
+    for address in df["address"].unique():
 
-        subset = df[df["ip_address"] == address]
+        subset = df[df["address"] == address]
         count_all = subset['value'].shape[0]
         count_online = subset[subset["value"] > 0].shape[0]
         ratio = round(count_online / count_all * 100, percentage_digits)
@@ -246,7 +246,7 @@ def get_map(data, user_lat, user_lon):
         latitude = values["latitude"]
         longitude = values["longitude"]
         average_ping = round(values["average"], 2)
-        address = values["ip_address"]
+        address = values["address"]
 
         tooltip = """
         <table>

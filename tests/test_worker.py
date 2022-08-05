@@ -53,7 +53,7 @@ class TestingWorker(unittest.TestCase):
         self.sql_conn.postsync(self.data["tasks"], [])
         tasks = self.sql_conn.get_tasks()
         self.assertEqual(len(tasks), len(self.data["tasks"]))
-        self.assertEqual(tasks[0]["ip_address"], self.data["tasks"][0]["ip_address"])
+        self.assertEqual(tasks[0]["address"], self.data["tasks"][0]["address"])
 
     def test030(self):
         """Remove obsolete task after second postsync.
