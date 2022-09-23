@@ -1,5 +1,9 @@
 fastapi
-request
 sqlalchemy
-unicorn
 ping3
+uvicorn
+requests
+matplotlib
+pandas
+scipy
+folium
