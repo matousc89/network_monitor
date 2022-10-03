@@ -4,6 +4,7 @@ takes care of the connection to the database
 from sqlalchemy.sql import func
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
+import sqlite3 #  i have added this if you find better way to handle databases, you can remove it
 
 from settings import DATASTORE_DATABASE
 from modules.datastore.models import Response, Task, Address
@@ -22,14 +23,103 @@ class DatastoreSqlConnector(CommonSqlConnector):
         engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=False)
         make_tables(engine)
         self.sessions = sessionmaker(engine)
+        
+    def M_CE(self):
+        """
+        generate JSON of average response time of each ip addresses without date from and date to
+        """ # TODO time selection
+        outcome = []
+        cur = sqlite3.connect("databases/datastore.db").cursor()
+        table_list1 = [a for a in cur.execute("SELECT * FROM 'responses'")]
+        for log in table_list1:
+            outcome.append({"time": log[3], log[1]: log[4], "worker":log[5]})#https://currentmillis.com
+        return outcome
+    def M_CE2(self, data):
+        """
+        add new task
+        """ # TODO add colors and name to database
+        con = sqlite3.connect("databases/datastore.db")
+        cur = con.cursor()
+        if (len(cur.execute(f"SELECT address FROM tasks WHERE address='{data[0]}'").fetchall()) == 0):
+            cur.execute("INSERT INTO tasks (address, task, frequency, worker) VALUES "
+                    f"('{data[0]}', '{data[1]}', '{data[2]}', '{data[3]}')")
+        con.commit()
+        con.close()
+        return "ok MCE2"
 
-    # def get_all_addr(self):
-    #     """
-    #     Get all unique addresses
-    #     """
-    #     with self.sessions.begin() as session:
-    #         result = list(session.query(Response.address).distinct())
-    #     return result
+    def M_CE3(self, address):
+        """
+        dellete task with ressults
+        """
+        con = sqlite3.connect("databases/datastore.db")
+        cur = con.cursor()
+        cur.execute(f"DELETE FROM 'tasks' WHERE address='{address}'")
+        cur.execute(f"DELETE FROM 'responses' WHERE address='{address}'")
+        con.commit()
+        con.close()
+        return "ok MCE3"
+
+    def M_CE4(self):
+        """
+        dellete all responses
+        """
+        con = sqlite3.connect("databases/datastore.db")
+        cur = con.cursor()
+        cur.execute("DELETE FROM 'responses'")
+        con.commit()
+        con.close()
+        return "ok MCE4"
+
+    def M_CE5(self, data):
+        """
+        update task (dell old and save new)
+        """
+        print(data)
+        con = sqlite3.connect("databases/datastore.db")
+        cur = con.cursor()
+        cur.execute(f"DELETE FROM 'tasks' WHERE address='{data[4]}'")
+        if (len(cur.execute(f"SELECT address FROM tasks WHERE address='{data[4]}'").fetchall()) == 0):
+            cur.execute("INSERT INTO tasks (address, task, frequency, worker) VALUES "
+                        f"('{data[0]}', '{data[1]}', '{data[2]}', '{data[3]}')")
+
+        con.commit()
+        con.close()
+        return "ok MCE5"
+
+    def M_CE6(self, data):
+        """
+        pause task just remove task from list
+        """
+
+        con = sqlite3.connect("databases/datastore.db")
+        cur = con.cursor()
+        if data[4]=='false':
+            cur.execute(f"DELETE FROM 'tasks' WHERE address='{data[0]}'")
+        else:
+            if (len(cur.execute(f"SELECT address FROM tasks WHERE address='{data[0]}'").fetchall()) == 0):
+                cur.execute("INSERT INTO tasks (address, task, frequency, worker) VALUES "
+                            f"('{data[0]}', '{data[1]}', '{data[2]}', '{data[3]}')")
+
+        con.commit()
+        con.close()
+        return "ok MCE6"
+
+    def get_worker_tasks(self, worker):
+        """
+        Returns list of tasks for requested worker.
+        """
+        with self.sessions.begin() as session:
+            query = session.query(Task).filter(Task.worker == worker)
+            return [item.__dict__ for item in query.all()] # TODO make custom function in Task class (instead of __dict__)
+
+
+# These top functions are what I had used.
+
+
+
+
+
+
 
     def add_response(self, address, time, value, task, worker):
         """

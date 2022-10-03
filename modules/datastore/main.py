@@ -17,12 +17,84 @@ if TESTING:
     sql_conn.clear_all_tables()
 
 app = FastAPI()
-
+print("http://127.0.0.1:8000/docs")  # link to default FastAPI browser
 
 @app.get("/")
 def read_root():
     """ access via FastApi, root directory return true value """
     return {"status": True}
+
+
+@app.get("/M_CE")#get all responses for graph
+def get_avrg_response():
+    """
+        generate JSON of all response times by time
+    """
+    return sql_conn.M_CE()
+
+
+@app.post("/M_CE2")#insert address
+async def put_new(address, task, time, worker):
+    """
+        generate JSON of all response times by time
+    """
+    data = [address,task,time,worker]
+    print("přidá: ", data)
+    return sql_conn.M_CE2(data)
+
+@app.post("/M_CE3")#delete address and data
+async def dell(address):
+    """
+        generate JSON of all response times by time
+    """
+    print("dell: ",address)
+    return sql_conn.M_CE3(address)
+
+@app.post("/M_CE4")#delete all responses
+async def dellall():
+    """
+        generate JSON of all response times by time
+    """
+    return sql_conn.M_CE4()
+
+@app.post("/M_CE5")#update tasks dont remove data
+async def update(address, task, time, worker,oldAddress):
+    """
+        generate JSON of all response times by time
+    """
+    data = [address, task, time, worker,oldAddress]
+    print("přidá: ", data)
+    return sql_conn.M_CE5(data)
+
+@app.post("/M_CE6")#pause/start
+async def pause(address, task, time, worker, runing):
+    """
+        generate JSON of all response times by time
+    """
+    data = [address, task, time, worker, runing]
+    print("Start: ", data)
+    return sql_conn.M_CE6(data)
+
+@app.get("/getWorkerTasks")
+def get_worker_tasks(worker):
+    """
+    Return tasks for given worker
+    """
+    return sql_conn.get_worker_tasks(worker)
+
+@app.get("/getWorkerTasks") # TODO why twice?
+def get_worker_tasks(worker):
+    """
+    Return tasks for given worker
+    """
+    return sql_conn.get_worker_tasks(worker)
+
+
+
+
+
+
+
 
 @app.get("/getAverageResponse")
 def get_avrg_response(date_from: Optional[str] = None, date_to: Optional[str] = None):
@@ -47,19 +119,6 @@ def add_response(address, time, value, task, worker):
     sql_conn.add_response(address, time, value, task, worker)
     return {"status": True}
 
-@app.get("/getWorkerTasks")
-def get_worker_tasks(worker):
-    """
-    Return tasks for given worker
-    """
-    return sql_conn.get_worker_tasks(worker)
-
-@app.get("/getWorkerTasks") # TODO why twice?
-def get_worker_tasks(worker):
-    """
-    Return tasks for given worker
-    """
-    return sql_conn.get_worker_tasks(worker)
 
 @app.get("/getAllAddresses")
 def get_worker_tasks():
