@@ -1,7 +1,7 @@
 """
 takes care of the connection to the database
 """
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, exists
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
 import sqlite3 #  i have added this if you find better way to handle databases, you can remove it
@@ -34,57 +34,63 @@ class DatastoreSqlConnector(CommonSqlConnector):
         for log in table_list1:
             outcome.append({"time": log[3], log[1]: log[4], "worker":log[5]})#https://currentmillis.com
         return outcome
-    def M_CE2(self, data):
+
+    def create_task(self, data):
         """
         add new task
         """ # TODO add colors and name to database
-        con = sqlite3.connect("databases/datastore.db")
-        cur = con.cursor()
-        if (len(cur.execute(f"SELECT address FROM tasks WHERE address='{data[0]}'").fetchall()) == 0):
-            cur.execute("INSERT INTO tasks (address, task, frequency, worker) VALUES "
-                    f"('{data[0]}', '{data[1]}', '{data[2]}', '{data[3]}')")
-        con.commit()
-        con.close()
+
+        result = Task(
+            address=data[0],
+            frequency=data[2],
+            task=data[1],
+            worker=data[3]
+        )
+
+        with self.sessions.begin() as session:
+                    existAddress = session.query(exists().where(Task.address == data[0])).scalar()
+                    if not existAddress:
+                        session.add(result)
+
         return "ok MCE2"
 
-    def M_CE3(self, address):
+    def delete_task(self, address):
         """
-        dellete task with ressults
+        delete address from tasks and responses of address
         """
-        con = sqlite3.connect("databases/datastore.db")
-        cur = con.cursor()
-        cur.execute(f"DELETE FROM 'tasks' WHERE address='{address}'")
-        cur.execute(f"DELETE FROM 'responses' WHERE address='{address}'")
-        con.commit()
-        con.close()
+        with self.sessions.begin() as session:
+            addressTask = session.query(Task).filter(Task.address == address).delete()
+            addressResponses = session.query(Response).filter(Response.address == address).delete()
+
         return "ok MCE3"
 
-    def M_CE4(self):
+    def delete_responses(self):
         """
         dellete all responses
         """
-        con = sqlite3.connect("databases/datastore.db")
-        cur = con.cursor()
-        cur.execute("DELETE FROM 'responses'")
-        con.commit()
-        con.close()
+        with self.sessions.begin() as session:
+            session.query(Response).delete()
         return "ok MCE4"
 
-    def M_CE5(self, data):
+    def update_task(self, data):
         """
         update task (dell old and save new)
         """
         print(data)
-        con = sqlite3.connect("databases/datastore.db")
-        cur = con.cursor()
-        cur.execute(f"DELETE FROM 'tasks' WHERE address='{data[4]}'")
-        if (len(cur.execute(f"SELECT address FROM tasks WHERE address='{data[4]}'").fetchall()) == 0):
-            cur.execute("INSERT INTO tasks (address, task, frequency, worker) VALUES "
-                        f"('{data[0]}', '{data[1]}', '{data[2]}', '{data[3]}')")
+        result = Task(
+            address=data[0],
+            frequency=data[2],
+            task=data[1],
+            worker=data[3]
+        )
 
-        con.commit()
-        con.close()
-        return "ok MCE5"
+        with self.sessions.begin() as session:
+                    addressTask = session.query(Task).filter(Task.address == data[4]).delete()
+                    existAddress = session.query(exists().where(Task.address == data[4])).scalar()
+                    if not existAddress:
+                        session.add(result)
+
+        return existAddress
 
     def M_CE6(self, data):
         """

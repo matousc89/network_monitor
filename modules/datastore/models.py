@@ -52,6 +52,6 @@ class Address(BaseItem, Base):
 
 def make_tables(engine):
     """
-    Crate tables if they do not exist.
+    Create tables if they do not exist.
     """
     Base.metadata.create_all(engine, checkfirst=True)
