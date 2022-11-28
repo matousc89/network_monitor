@@ -25,12 +25,12 @@ def read_root():
     return {"status": True}
 
 
-@app.get("/M_CE")#get all responses for graph
+@app.get("/getAllResponses")#get all responses for graph
 def get_avrg_response():
     """
         generate JSON of all response times by time
     """
-    return sql_conn.M_CE()
+    return sql_conn.get_all_responses()
 
 
 @app.post("/createTask")#insert address
@@ -50,12 +50,12 @@ async def dell(address):
     print("dell: ",address)
     return sql_conn.delete_task(address)
 
-@app.post("/deleteResponses")#delete all responses
+@app.post("/deleteAllResponses")#delete all responses
 async def delete_responses():
     """
         generate JSON of all response times by time
     """
-    return sql_conn.delete_responses()
+    return sql_conn.delete_all_responses()
 
 @app.post("/updateTask")#update tasks dont remove data
 async def update_task(address, task, time, worker,oldAddress):
@@ -66,14 +66,14 @@ async def update_task(address, task, time, worker,oldAddress):
     print("přidá: ", data)
     return sql_conn.update_task(data)
 
-@app.post("/M_CE6") #pause/start
+@app.post("/pauseTask") #pause/start
 async def pause(address, task, time, worker, runing):
     """
         generate JSON of all response times by time
     """
     data = [address, task, time, worker, runing]
     print("Start: ", data)
-    return sql_conn.M_CE6(data)
+    return sql_conn.pause_task(data)
 
 @app.get("/getWorkerTasks")
 def get_worker_tasks(worker):

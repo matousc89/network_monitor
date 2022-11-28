@@ -16,6 +16,18 @@ class Response(BaseResponse, Base):
     """
     worker = Column(String(100))
 
+    def values(self):
+        """
+        Return values for api client.
+        """
+        return {
+            "address": self.address,
+            "task": self.task,
+            "time": self.time,
+            "value": self.value,
+            "worker": self.worker
+        }
+
 
 class Task(BaseTask, Base):
     """

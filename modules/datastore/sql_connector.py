@@ -24,16 +24,15 @@ class DatastoreSqlConnector(CommonSqlConnector):
         make_tables(engine)
         self.sessions = sessionmaker(engine)
         
-    def M_CE(self):
+    def get_all_responses(self):
         """
-        generate JSON of average response time of each ip addresses without date from and date to
+        generate JSON of all responses
         """ # TODO time selection
-        outcome = []
-        cur = sqlite3.connect("databases/datastore.db").cursor()
-        table_list1 = [a for a in cur.execute("SELECT * FROM 'responses'")]
-        for log in table_list1:
-            outcome.append({"time": log[3], log[1]: log[4], "worker":log[5]})#https://currentmillis.com
-        return outcome
+
+        with self.sessions.begin() as session:
+            query = session.query(Response)
+            return {"status": "200", "data": [item.values() for item in query.all()]}
+
 
     def create_task(self, data):
         """
@@ -52,7 +51,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
                     if not existAddress:
                         session.add(result)
 
-        return "ok MCE2"
+        return {"status": "200"}
 
     def delete_task(self, address):
         """
@@ -60,17 +59,22 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         with self.sessions.begin() as session:
             addressTask = session.query(Task).filter(Task.address == address).delete()
+
+        return {"status": "200"}
+    
+    def delete_addr_responses(self, address):
+        with self.sessions.begin() as session:
             addressResponses = session.query(Response).filter(Response.address == address).delete()
 
-        return "ok MCE3"
+        return "ok"
 
-    def delete_responses(self):
+    def delete_all_responses(self):
         """
-        dellete all responses
+        delete all responses
         """
         with self.sessions.begin() as session:
             session.query(Response).delete()
-        return "ok MCE4"
+        return {"status": "200"}
 
     def update_task(self, data):
         """
@@ -90,25 +94,19 @@ class DatastoreSqlConnector(CommonSqlConnector):
                     if not existAddress:
                         session.add(result)
 
-        return existAddress
+        return {"status": "200"}
 
-    def M_CE6(self, data):
+    def pause_task(self, data):
         """
         pause task just remove task from list
         """
-
-        con = sqlite3.connect("databases/datastore.db")
-        cur = con.cursor()
         if data[4]=='false':
-            cur.execute(f"DELETE FROM 'tasks' WHERE address='{data[0]}'")
-        else:
-            if (len(cur.execute(f"SELECT address FROM tasks WHERE address='{data[0]}'").fetchall()) == 0):
-                cur.execute("INSERT INTO tasks (address, task, frequency, worker) VALUES "
-                            f"('{data[0]}', '{data[1]}', '{data[2]}', '{data[3]}')")
+            self.delete_task(data[0])
 
-        con.commit()
-        con.close()
-        return "ok MCE6"
+        else:
+            self.create_task(data)
+
+        return {"status": "200"}
 
     def get_worker_tasks(self, worker):
         """
@@ -179,7 +177,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
                     "average": query.with_entities(func.avg(Response.value)).one()[0],
                     "count": query.count()
                 })
-        return {"status": "Ok", "data": outcome}
+        return {"status": "200", "data": outcome}
 
     def get_worker_tasks(self, worker):
         """
@@ -254,10 +252,10 @@ class DatastoreSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             address = session.query(Address).filter(Address.address == address_data["address"]).first()
             if address is None:
-                return {"status": "Not found"}
+                return {"status": "500"}
             else:
                 session.delete(address)
-                return {"status": "Deleted"}
+                return {"status": "200"}
 
     def get_address(self, address):
         """
@@ -266,9 +264,9 @@ class DatastoreSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             address = session.query(Address).filter(Address.address == address).first()
             if address is None:
-                return {"status": "Not found"}
+                return {"status": "500"}
             else:
-                return {"status": "Ok", "data": address.values()}
+                return {"status": "200", "data": address.values()}
 
     def get_address(self, address):
         """
@@ -277,9 +275,9 @@ class DatastoreSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             address = session.query(Address).filter(Address.address == address).first()
             if address is None:
-                return {"status": "Not found"}
+                return {"status": "545"}
             else:
-                return {"status": "Ok", "data": address.values()}
+                return {"status": "200", "data": address.values()}
 
     def get_all_addresses(self):
         """
@@ -287,4 +285,4 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         with self.sessions.begin() as session:
             query = session.query(Address)
-            return {"status": "Ok", "data": [item.values() for item in query.all()]}
+            return {"status": "200", "data": [item.values() for item in query.all()]}
