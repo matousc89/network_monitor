@@ -16,6 +16,18 @@ class Response(BaseResponse, Base):
     """
     worker = Column(String(100))
 
+    def values(self):
+        """
+        Return values for api client.
+        """
+        return {
+            "address": self.address,
+            "task": self.task,
+            "time": self.time,
+            "value": self.value,
+            "worker": self.worker
+        }
+
 
 class Task(BaseTask, Base):
     """
@@ -52,6 +64,6 @@ class Address(BaseItem, Base):
 
 def make_tables(engine):
     """
-    Crate tables if they do not exist.
+    Create tables if they do not exist.
     """
     Base.metadata.create_all(engine, checkfirst=True)

@@ -25,55 +25,55 @@ def read_root():
     return {"status": True}
 
 
-@app.get("/M_CE")#get all responses for graph
+@app.get("/getAllResponses")#get all responses for graph
 def get_avrg_response():
     """
         generate JSON of all response times by time
     """
-    return sql_conn.M_CE()
+    return sql_conn.get_all_responses()
 
 
-@app.post("/M_CE2")#insert address
+@app.post("/createTask")#insert address
 async def put_new(address, task, time, worker):
     """
         generate JSON of all response times by time
     """
     data = [address,task,time,worker]
     print("přidá: ", data)
-    return sql_conn.M_CE2(data)
+    return sql_conn.create_task(data)
 
-@app.post("/M_CE3")#delete address and data
+@app.post("/deleteTask") #delete address from task table and responses of address
 async def dell(address):
     """
         generate JSON of all response times by time
     """
     print("dell: ",address)
-    return sql_conn.M_CE3(address)
+    return sql_conn.delete_task(address)
 
-@app.post("/M_CE4")#delete all responses
-async def dellall():
+@app.post("/deleteAllResponses")#delete all responses
+async def delete_responses():
     """
         generate JSON of all response times by time
     """
-    return sql_conn.M_CE4()
+    return sql_conn.delete_all_responses()
 
-@app.post("/M_CE5")#update tasks dont remove data
-async def update(address, task, time, worker,oldAddress):
+@app.post("/updateTask")#update tasks dont remove data
+async def update_task(address, task, time, worker,oldAddress):
     """
         generate JSON of all response times by time
     """
     data = [address, task, time, worker,oldAddress]
     print("přidá: ", data)
-    return sql_conn.M_CE5(data)
+    return sql_conn.update_task(data)
 
-@app.post("/M_CE6")#pause/start
+@app.post("/pauseTask") #pause/start
 async def pause(address, task, time, worker, runing):
     """
         generate JSON of all response times by time
     """
     data = [address, task, time, worker, runing]
     print("Start: ", data)
-    return sql_conn.M_CE6(data)
+    return sql_conn.pause_task(data)
 
 @app.get("/getWorkerTasks")
 def get_worker_tasks(worker):

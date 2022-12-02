@@ -81,7 +81,7 @@ class WorkerSqlConnector(CommonSqlConnector):
             return [item.sync_values() for item in query.all()]
 
     def postsync(self, tasks, responses):
-        """Function called after synchronization with datastore
+        """Fu r synchronization with datastore
 
         Tasks:
         - New tasks are created.
