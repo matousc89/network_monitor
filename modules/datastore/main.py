@@ -33,6 +33,14 @@ def get_avrg_response():
     return sql_conn.get_all_responses()
 
 
+@app.get("/getAllResponsesFrom")#get all responses for graph
+def get_responses_from(timeFrom):
+    """
+        generate JSON of all response times by time from time
+    """
+    return sql_conn.get_all_responses_from(timeFrom)
+
+
 @app.post("/createTask")#insert address
 async def put_new(address, task, time, worker):
     """
