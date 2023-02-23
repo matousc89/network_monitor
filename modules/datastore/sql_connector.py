@@ -7,9 +7,10 @@ from sqlalchemy.orm import sessionmaker
 import sqlite3 #  i have added this if you find better way to handle databases, you can remove it
 
 from settings import DATASTORE_DATABASE
-from modules.datastore.models import Response, Task, Address
+from modules.datastore.models import Response, Task, Address, Users
 from modules.datastore.models import make_tables
 from modules.sql_connector import CommonSqlConnector
+from modules.datastore.data_validation import DataValidation
 
 class DatastoreSqlConnector(CommonSqlConnector):
     """
@@ -23,7 +24,17 @@ class DatastoreSqlConnector(CommonSqlConnector):
         engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=False)
         make_tables(engine)
         self.sessions = sessionmaker(engine)
-        
+
+    def get_user(self, username):
+        with self.sessions.begin() as session:
+            result = session.query(Users).filter(Users.username == username).one()
+            return result.role
+
+    def get_user_hash(self, username):
+        with self.sessions.begin() as session:
+            result = session.query(Users).filter(Users.username == username).one()
+            return result.hashed_password
+    
     def get_all_responses(self):
         """
         generate JSON of all responses
@@ -38,7 +49,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         add new task
         """ # TODO add colors and name to database
-
+        test = DataValidation()
         result = Task(
             address=data[0],
             frequency=data[2],
@@ -51,7 +62,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
                     if not existAddress:
                         session.add(result)
 
-        return {"status": "200"}
+        return {"status": DataValidation().IP()}
 
     def delete_task(self, address):
         """
