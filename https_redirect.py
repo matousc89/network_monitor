@@ -12,4 +12,4 @@ async def https_redirect(request: Request):
     return RedirectResponse(request.url.replace(scheme='https'))
 
 if __name__ == '__main__':
-    uvicorn.run('https_redirect:app', port=8000, host='0.0.0.0')
+    uvicorn.run('https_redirect:app', port=8100, host='0.0.0.0')
