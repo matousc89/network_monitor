@@ -2,17 +2,17 @@
 Fast api setup and routes for datastore.
 """
 from typing import Optional
-from fastapi import Request, FastAPI, HTTPException, status
+from fastapi import Request, FastAPI, HTTPException, status, Security
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
-from typing import Union
+from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm,SecurityScopes
+from typing import List, Union
 
 from datetime import datetime, timedelta
 from modules.datastore.sql_connector import DatastoreSqlConnector
 from settings import TESTING
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from modules.datastore import old_report
@@ -26,7 +26,12 @@ if TESTING:
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="token",
+    scopes={"reader": "Reading information", "writer": "Writing information"},
+)
+
 app = FastAPI()
 print("http://127.0.0.1:8000/docs")  # link to default FastAPI browser
 
@@ -58,9 +63,11 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Union[str, None] = None
+    scopes: List[str] = []
 
 class UserInDB(User):
     hashed_password: str
+    
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -88,26 +95,40 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)):
+    if security_scopes.scopes:
+        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+    else:
+        authenticate_value = "Bearer"
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
+        headers={"WWW-Authenticate": authenticate_value},
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_scopes = payload.get("scopes", [])
+        token_data = TokenData(scopes=token_scopes, username=username)
+    except (JWTError, ValidationError):
+        raise credentials_exception
     except JWTError:
         raise credentials_exception
     user = get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
+    for scope in security_scopes.scopes:
+        if scope not in token_data.scopes:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
     return user
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
+async def get_current_active_user(current_user: User = Security(get_current_user, scopes=["2"])):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
@@ -123,9 +144,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.username, "scopes": [user.role]},
+        expires_delta=access_token_expires,
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 @app.get("/users/me/", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
@@ -141,8 +164,8 @@ async def get_user_hash(username):
     return sql_conn.get_user_hash(username)
 
 @app.get("/items/") #testing purpose / oauth2
-async def read_items(token: str = Depends(oauth2_scheme)):
-    return {"token": token}
+async def read_items(current_user: User = Security(get_current_active_user, scopes=["writer"])):
+    return [{"item_id": "Foo", "owner": current_user.username}]
 
 
 @app.get("/getAllResponses")#get all responses for graph

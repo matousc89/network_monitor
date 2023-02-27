@@ -37,7 +37,8 @@ class Worker():
                 "responses": responses,
             }
             try:
-                tasks = requests.post(self.datastore_url, json=payload).json()
+                requests.packages.urllib3.disable_warnings() #later it needs to be removed
+                tasks = requests.post(self.datastore_url, json=payload,verify=False).json() #Attention: verify:False
                 self.sql_conn.postsync(tasks, responses)
             except requests.exceptions.RequestException as e:
                 logging.critical("Cannot contact datastore - {}".format(str(e)))
