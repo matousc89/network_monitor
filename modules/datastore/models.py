@@ -4,7 +4,7 @@ Models adjusted for datastore.
 TODO: add Worker model - to store its GPS
 """
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, String, Float, Integer
+from sqlalchemy import Column, String, Float, Integer, Boolean
 
 from modules.models import BaseTask, BaseResponse, BaseItem
 
@@ -36,6 +36,12 @@ class Task(BaseTask, Base):
 
     
     worker = Column(String(100))
+    name = Column(String(100))
+    latitude = Column(Float)
+    longitude = Column(Float)
+    color = Column(String(10))
+    runing = Column(Boolean)
+    hide = Column(Boolean)
 
 
 class Address(BaseItem, Base):
@@ -49,6 +55,8 @@ class Address(BaseItem, Base):
     latitude = Column(Float)
     longitude = Column(Float)
     note = Column(String(500))
+    color = Column(String(10))
+    runing = Column(Boolean)
 
     def values(self):
         """
@@ -61,6 +69,7 @@ class Address(BaseItem, Base):
             "latitude": self.latitude,
             "longitude": self.longitude,
             "note": self.note,
+            "color": self.color,
         }
 
 class Users(Base):

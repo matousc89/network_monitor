@@ -30,18 +30,31 @@ class DatastoreSqlConnector(CommonSqlConnector):
             result = session.query(Users).filter(Users.username == username).one()
             return result.role
 
+    def create_user(self, username, hashed_password, role):
+        print(username, hashed_password, role)
+        with self.sessions.begin() as session:
+                session.add(Users(username=username, hashed_password=hashed_password, role=role))
+        return {"status": "200"}
+
     def get_user_hash(self, username):
         with self.sessions.begin() as session:
             result = session.query(Users).filter(Users.username == username).one()
             return result.hashed_password
     
-    def get_all_responses(self):
+    def get_all_responses(self, time_from, time_to):
         """
         generate JSON of all responses
         """ # TODO time selection
 
         with self.sessions.begin() as session:
-            query = session.query(Response)
+            if time_from!=None and time_to!=None:
+                query = session.query(Response).filter(Response.time >= time_from, Response.time <= time_to)
+            elif time_from == None and time_to != None:
+                query = session.query(Response).filter(Response.time <= time_to)
+            elif time_from != None and time_to == None:
+                query = session.query(Response).filter(Response.time >= time_from)
+            else:
+                query = session.query(Response)
             return {"status": "200", "data": [item.values() for item in query.all()]}
 
 
@@ -54,7 +67,13 @@ class DatastoreSqlConnector(CommonSqlConnector):
             address=data[0],
             frequency=data[2],
             task=data[1],
-            worker=data[3]
+            worker=data[3],
+            name=data[7],
+            latitude=data[4],
+            longitude=data[5],
+            color=data[6],
+            runing=data[8],
+            hide=data[9]
         )
 
         with self.sessions.begin() as session:
@@ -92,18 +111,25 @@ class DatastoreSqlConnector(CommonSqlConnector):
         update task (dell old and save new)
         """
         print(data)
-        result = Task(
-            address=data[0],
-            frequency=data[2],
-            task=data[1],
-            worker=data[3]
-        )
+        result = {
+            "address":data[0],
+            "frequency":data[2],
+            "task":data[1],
+            "worker":data[3],
+            "name":data[7],
+            "latitude":data[4],
+            "longitude":data[5],
+            "color":data[6],
+            "runing":data[8]
+        }
 
         with self.sessions.begin() as session:
-                    addressTask = session.query(Task).filter(Task.address == data[4]).delete()
-                    existAddress = session.query(exists().where(Task.address == data[4])).scalar()
+                    #addressTask = session.query(Task).filter(Task.address == data[9]).delete()
+                    #existAddress = session.query(exists().where(Task.address == data[9])).scalar()
+                    existAddress = session.query(Task).filter(Task.address == data[9]).update(result)
+                    print(existAddress)
                     if not existAddress:
-                        session.add(result)
+                        session.add(Task(**result))
 
         return {"status": "200"}
 
@@ -111,11 +137,18 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         pause task just remove task from list
         """
-        if data[4]=='false':
-            self.delete_task(data[0])
+        with self.sessions.begin() as session:
+            session.query(Task).filter(Task.address == data[0]).update({"runing":data[1]})
 
-        else:
-            self.create_task(data)
+
+        return {"status": "200"}
+
+    def hide_task(self, data):
+        """
+        pause task just remove task from list
+        """
+        with self.sessions.begin() as session:
+            session.query(Task).filter(Task.address == data[0]).update({"hide":data[1]})
 
         return {"status": "200"}
 
