@@ -176,19 +176,19 @@ async def add_user(username: str, password: str, role: int):
 
 
 @app.get("/getAllResponses")#get all responses for graph
-def get_avrg_response(current_user: User = Security(get_current_active_user, scopes=["1"])):
+def get_avrg_response(time_from: Optional[str] = None, time_to: Optional[str] = None, current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
-    return sql_conn.get_all_responses()
+    return sql_conn.get_all_responses(time_from, time_to)
 
 
 @app.post("/createTask")#insert address
-async def put_new(address, task, time, worker, current_user: User = Security(get_current_active_user, scopes=["1"])):
+async def put_new(address, task, time, worker, latitude, longitude, color, name, runing: bool=True, hide: bool=False, current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
-    data = [address,task,time,worker]
+    data = [address, task, time, worker, latitude, longitude, color, name, runing, hide]
     print("přidá: ", data)
     return sql_conn.create_task(data)
 
@@ -208,20 +208,20 @@ async def delete_responses(current_user: User = Security(get_current_active_user
     return sql_conn.delete_all_responses()
 
 @app.post("/updateTask")#update tasks dont remove data
-async def update_task(address, task, time, worker,oldAddress,current_user: User = Security(get_current_active_user, scopes=["1"])):
+async def update_task(address, task, time, worker, oldAddress, latitude, longitude, color, name, runing: bool, current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
-    data = [address, task, time, worker,oldAddress]
-    print("přidá: ", data)
+    data = [address, task, time, worker, latitude, longitude, color, name, runing, oldAddress]
+    print("upravi: ", data)
     return sql_conn.update_task(data)
 
 @app.post("/pauseTask") #pause/start
-async def pause(address, task, time, worker, runing, current_user: User = Security(get_current_active_user, scopes=["1"])):
+async def pause(address, runing: bool = True, current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
-    data = [address, task, time, worker, runing]
+    data = [address, runing]
     print("Start: ", data)
     return sql_conn.pause_task(data)
 
