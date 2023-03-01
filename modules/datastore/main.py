@@ -33,7 +33,7 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 app = FastAPI()
-print("http://127.0.0.1:8000/docs")  # link to default FastAPI browser
+print("https://127.0.0.1:8000/docs")  # link to default FastAPI browser
 
 @app.get("/")
 def read_root():
@@ -168,8 +168,15 @@ async def read_items(current_user: User = Security(get_current_active_user, scop
     return [{"item_id": "Foo", "owner": current_user.username}]
 
 
+@app.post("/createUser")
+async def add_user(username: str, password: str, role: int):
+    hashed_password = get_password_hash(password)
+    sql_conn.create_user(username=username, hashed_password=hashed_password, role=role)
+
+
+
 @app.get("/getAllResponses")#get all responses for graph
-def get_avrg_response():
+def get_avrg_response(current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
@@ -177,7 +184,7 @@ def get_avrg_response():
 
 
 @app.post("/createTask")#insert address
-async def put_new(address, task, time, worker):
+async def put_new(address, task, time, worker, current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
@@ -186,7 +193,7 @@ async def put_new(address, task, time, worker):
     return sql_conn.create_task(data)
 
 @app.post("/deleteTask") #delete address from task table and responses of address
-async def dell(address):
+async def dell(address,current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
@@ -194,14 +201,14 @@ async def dell(address):
     return sql_conn.delete_task(address)
 
 @app.post("/deleteAllResponses")#delete all responses
-async def delete_responses():
+async def delete_responses(current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
     return sql_conn.delete_all_responses()
 
 @app.post("/updateTask")#update tasks dont remove data
-async def update_task(address, task, time, worker,oldAddress):
+async def update_task(address, task, time, worker,oldAddress,current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
@@ -210,7 +217,7 @@ async def update_task(address, task, time, worker,oldAddress):
     return sql_conn.update_task(data)
 
 @app.post("/pauseTask") #pause/start
-async def pause(address, task, time, worker, runing):
+async def pause(address, task, time, worker, runing, current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
@@ -218,25 +225,21 @@ async def pause(address, task, time, worker, runing):
     print("Start: ", data)
     return sql_conn.pause_task(data)
 
+@app.post("/hideTask") #pause/start
+async def pause(address, hide: bool = False, current_user: User = Security(get_current_active_user, scopes=["1"])):
+    """
+        generate JSON of all response times by time
+    """
+    data = [address, hide]
+    print("Start: ", data)
+    return sql_conn.hide_task(data)
+
 @app.get("/getWorkerTasks")
-def get_worker_tasks(worker):
+def get_worker_tasks(worker,current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
     Return tasks for given worker
     """
     return sql_conn.get_worker_tasks(worker)
-
-@app.get("/getWorkerTasks") # TODO why twice?
-def get_worker_tasks(worker):
-    """
-    Return tasks for given worker
-    """
-    return sql_conn.get_worker_tasks(worker)
-
-
-
-
-
-
 
 
 @app.get("/getAverageResponse")
@@ -248,7 +251,7 @@ def get_avrg_response(date_from: Optional[str] = None, date_to: Optional[str] = 
     return sql_conn.get_avrg_response_all(date_from, date_to)
 
 @app.get("/getResponseSummary")
-def get_response_summary(worker=False, time_from: Optional[str] = None, time_to: Optional[str] = None):
+def get_response_summary(worker=False, time_from: Optional[str] = None, time_to: Optional[str] = None, current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
     get info is detailed list of addresses (generate: number of addr records,
     first time testing, last time testing and average responsing time)"""
@@ -269,9 +272,6 @@ def get_worker_tasks():
     Get all addresses
     """
     return sql_conn.get_all_addresses()
-
-
-
 
 @app.get("/getAddress") # TODO ?
 def get_worker_tasks(address):

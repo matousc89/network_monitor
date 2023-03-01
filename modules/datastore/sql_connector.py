@@ -30,6 +30,12 @@ class DatastoreSqlConnector(CommonSqlConnector):
             result = session.query(Users).filter(Users.username == username).one()
             return result.role
 
+    def create_user(self, username, hashed_password, role):
+        print(username, hashed_password, role)
+        with self.sessions.begin() as session:
+                session.add(Users(username=username, hashed_password=hashed_password, role=role))
+        return {"status": "200"}
+
     def get_user_hash(self, username):
         with self.sessions.begin() as session:
             result = session.query(Users).filter(Users.username == username).one()
@@ -116,6 +122,15 @@ class DatastoreSqlConnector(CommonSqlConnector):
 
         else:
             self.create_task(data)
+
+        return {"status": "200"}
+
+    def hide_task(self, data):
+        """
+        pause task just remove task from list
+        """
+        with self.sessions.begin() as session:
+            session.query(Task).filter(Task.address == data[0]).update({"hide":data[1]})
 
         return {"status": "200"}
 
