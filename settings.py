@@ -12,6 +12,7 @@ from modules.common import build_url
 
 TESTING = False
 
+WORKER_API = "9d207bf0-10f5-4d8f-a479-22ff5aeff8d1"
 DATABASE_FOLDER = "databases"
 LOG_FOLDER = "logs"
 

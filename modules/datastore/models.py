@@ -3,8 +3,16 @@ Models adjusted for datastore.
 
 TODO: add Worker model - to store its GPS
 """
+from __future__ import annotations
+from typing import List
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, String, Float, Integer, Boolean
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import relationship
+from sqlalchemy import Table
 
 from modules.models import BaseTask, BaseResponse, BaseItem
 
@@ -28,11 +36,10 @@ class Response(BaseResponse, Base):
             "worker": self.worker
         }
 
-
+"""
 class Task(BaseTask, Base):
-    """
-    Definition of task.
-    """
+    #Definition of task.
+
 
     
     worker = Column(String(100))
@@ -42,6 +49,7 @@ class Task(BaseTask, Base):
     color = Column(String(10))
     runing = Column(Boolean)
     hide = Column(Boolean)
+"""
 
 
 class Address(BaseItem, Base):
@@ -77,7 +85,6 @@ class Users(Base):
     
     """
     __tablename__ = 'users'
-
     id = Column(Integer, primary_key=True)
     username = Column(String(100))
     hashed_password = Column(String(100))
@@ -93,13 +100,23 @@ class Users(Base):
             "role": self.role,
         }
 
-class Worker(Base):
+class Base1(DeclarativeBase):
+    pass
+
+worker_has_task = Table(
+    "worker_has_task",
+    Base1.metadata,
+    Column("worker_id", ForeignKey("workers.id")),
+    Column("task_id", ForeignKey("tasks.id")),
+)
+
+class Worker(Base1):
     """
     
     """
     __tablename__ = 'workers'
-
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task = relationship("Task", secondary=worker_has_task)
     name = Column(String(100))
     token = Column(String(100))
 
@@ -112,15 +129,20 @@ class Worker(Base):
 
         }
 
-class WorkerHasTask(Base):
+
+class Task(Base1,BaseTask):
     """
     
     """
-    __tablename__ = 'worker_has_task'
-
-    id = Column(Integer, primary_key=True)
-    worker_id = Column(Integer)
-    task_id = Column(Integer)
+    __tablename__ = 'tasks'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    address = Column(String(100))
+    name = Column(String(100))
+    latitude = Column(Float)
+    longitude = Column(Float)
+    color = Column(String(10))
+    runing = Column(Boolean)
+    hide = Column(Boolean)
 
     def values(self):
         """
@@ -128,6 +150,13 @@ class WorkerHasTask(Base):
         """
         return {
             "id": self.id,
+            "address": self.address,
+            "name": self.name,
+            "location": self.location,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "note": self.note,
+            "color": self.color,
 
         }
 
@@ -156,3 +185,4 @@ def make_tables(engine):
     Create tables if they do not exist.
     """
     Base.metadata.create_all(engine, checkfirst=True)
+    Base1.metadata.create_all(engine, checkfirst=True)

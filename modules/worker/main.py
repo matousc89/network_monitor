@@ -7,11 +7,12 @@ import requests
 import logging
 import copy
 
-from settings import DATASTORE_APP_ADDRESS
+from settings import DATASTORE_APP_ADDRESS, WORKER_API
 from modules.worker.sql_connector import WorkerSqlConnector
 from modules.worker.measurements import get_response_ping
 from modules.common import get_granularity, build_url
 from modules.common import ms_time, ms_sleep
+from fastapi.security import APIKeyHeader, APIKeyQuery
 
 from settings import worker_log_config
 
@@ -19,6 +20,7 @@ class Worker():
     """
     Worker class
     """
+
     def __init__(self, run=True):
         logging.config.dictConfig(worker_log_config)
         self.name = "default"# TODO where it should be stored? Should default value be UUID?
@@ -35,12 +37,13 @@ class Worker():
             payload = {
                 "worker": self.name,
                 "responses": responses,
+                "api": WORKER_API,
             }
             try:
                 requests.packages.urllib3.disable_warnings() #later it needs to be removed
-
                 tasks = requests.post(self.datastore_url, json=payload,verify=False).json() #Attention: verify:False
-                self.sql_conn.postsync(tasks, responses)
+                if tasks is not None:
+                    self.sql_conn.postsync(tasks, responses)
             except requests.exceptions.RequestException as e:
                 logging.critical("Cannot contact datastore - {}".format(str(e)))
                 self.sql_conn.postsync([], [])

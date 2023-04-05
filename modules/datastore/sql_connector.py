@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 import sqlite3 #  i have added this if you find better way to handle databases, you can remove it
 
 from settings import DATASTORE_DATABASE
-from modules.datastore.models import Response, Task, Address, Users
+from modules.datastore.models import Response, Task, Address, Users, Worker, worker_has_task
 from modules.datastore.models import make_tables
 from modules.sql_connector import CommonSqlConnector
 from modules.datastore.data_validation import DataValidation
@@ -40,6 +40,14 @@ class DatastoreSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             result = session.query(Users).filter(Users.username == username).one()
             return result.hashed_password
+
+    def get_worker(self, token):
+        try:
+            with self.sessions.begin() as session:
+                result = session.query(Worker).filter(Worker.token == token).one()
+                return result.id
+        except:
+            return None
     
     def get_all_responses(self, time_from, time_to):
         """
@@ -67,7 +75,6 @@ class DatastoreSqlConnector(CommonSqlConnector):
             address=data[0],
             frequency=data[2],
             task=data[1],
-            worker=data[3],
             name=data[7],
             latitude=data[4],
             longitude=data[5],
@@ -82,6 +89,13 @@ class DatastoreSqlConnector(CommonSqlConnector):
                         session.add(result)
 
         return {"status": DataValidation().IP()}
+
+    def associate_task(self, data):
+        with self.sessions.begin() as session:
+            statement = worker_has_task.insert().values(task_id=data[0], worker_id=data[1])
+            session.execute(statement)
+            session.commit()
+
 
     def delete_task(self, address):
         """
@@ -235,20 +249,26 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         Sync worker - store responses and return tasks
         """
-        with self.sessions.begin() as session:
-            for response in data["responses"]:
-                result = Response(
-                    address=response["address"],
-                    time=response["time"],
-                    value=response["value"],
-                    task=response["task"],
-                    worker=data["worker"]
-                )
-                session.add(result)
-                # TODO alter task last update
+        worker_id = self.get_worker(data["api"])
 
-            tasks = session.query(Task).filter(Task.worker == data["worker"])
-            return [item.__dict__ for item in tasks.all()] # TODO make custom function in Task class (instead of __dict__)
+        if worker_id is not None:
+            with self.sessions.begin() as session:
+                for response in data["responses"]:
+                    result = Response(
+                        address=response["address"],
+                        time=response["time"],
+                        value=response["value"],
+                        task=response["task"],
+                        worker=worker_id
+                    )
+                    session.add(result)
+                    # TODO alter task last update
+
+                ##tasks = session.query.filter(Task.worker == worker_id)
+                tasks = session.query(Task).join(Task, Worker.task).filter(Worker.id == worker_id)
+                #tasks = session.query(Worker).filter(Worker.task.contains(task)).all()
+                #tasks = session.query(Task).filter(Task.worker_id == worker_id)
+                return [item.__dict__ for item in tasks.all()] # TODO make custom function in Task class (instead of __dict__)
 
     def clear_all_tables(self):
         """

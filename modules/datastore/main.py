@@ -6,7 +6,7 @@ from fastapi import Request, FastAPI, HTTPException, status, Security
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm,SecurityScopes
+from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm,SecurityScopes, APIKeyHeader, APIKeyQuery
 from typing import List, Union
 
 from datetime import datetime, timedelta
@@ -16,8 +16,6 @@ from pydantic import BaseModel, ValidationError
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from modules.datastore import old_report
-
-
 
 
 sql_conn = DatastoreSqlConnector()
@@ -31,6 +29,15 @@ oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
     scopes={"reader": "Reading information", "writer": "Writing information"},
 )
+
+API_KEYS = [
+"9d207bf0-10f5-4d8f-a479-22ff5aeff8d1",
+"f47d4a2c-24cf-4745-937e-620a5963c0b8",
+"b7061546-75e8-444b-a2c4-f19655d07eb8",
+]
+
+api_key_query = APIKeyQuery(name="api-key", auto_error=False)
+api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
 
 app = FastAPI()
 print("https://127.0.0.1:8000/docs")  # link to default FastAPI browser
@@ -67,7 +74,6 @@ class TokenData(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
-    
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -133,6 +139,28 @@ async def get_current_active_user(current_user: User = Security(get_current_user
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+def get_api_key(api_key_query: str = Security(api_key_query), api_key_header: str = Security(api_key_header)):
+    worker_id = sql_conn.get_worker(api_key_query)
+
+    if api_key_query is not None:
+        worker_id = sql_conn.get_worker(api_key_query)
+        if worker_id is not None:
+            return api_key_query
+
+    if api_key_header is not None:
+        worker_id = sql_conn.get_worker(api_key_header)
+        if worker_id is not None:
+            return api_key_header
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing API Key",)
+
+@app.get("/private")
+def private(api_key: str = Security(get_api_key)):
+    """A Private endpoint that requires a valid API key be provided"""
+    return f"Private Endpoint. API Key is: {api_key}"
+
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(form_data.username, form_data.password)
@@ -184,13 +212,22 @@ def get_avrg_response(time_from: Optional[str] = None, time_to: Optional[str] = 
 
 
 @app.post("/createTask")#insert address
-async def put_new(address, task, time, worker, latitude, longitude, color, name, runing: bool=True, hide: bool=False, current_user: User = Security(get_current_active_user, scopes=["1"])):
+async def put_new(address, task, time, worker:int, latitude, longitude, color, name, runing: bool=True, hide: bool=False, current_user: User = Security(get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
     data = [address, task, time, worker, latitude, longitude, color, name, runing, hide]
     print("přidá: ", data)
     return sql_conn.create_task(data)
+
+@app.post("/associateTask") #associtate task to worker
+async def put_new(taskId:int, workerId:int, current_user: User = Security(get_current_active_user, scopes=["1"])):
+    """
+        generate JSON of all response times by time
+    """
+    data = [taskId, workerId]
+    return sql_conn.associate_task(data)
+
 
 @app.post("/deleteTask") #delete address from task table and responses of address
 async def dell(address,current_user: User = Security(get_current_active_user, scopes=["1"])):
