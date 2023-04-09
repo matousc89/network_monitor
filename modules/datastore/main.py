@@ -1,154 +1,54 @@
 """
 Fast api setup and routes for datastore.
 """
-from typing import Optional
 from fastapi import Request, FastAPI, HTTPException, status, Security
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm,SecurityScopes, APIKeyHeader, APIKeyQuery
-from typing import List, Union
 
-from datetime import datetime, timedelta
-from modules.datastore.sql_connector import DatastoreSqlConnector
 from settings import TESTING
-from pydantic import BaseModel, ValidationError
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from modules.datastore import old_report
+from modules.datastore.OAuth2 import OAuth2, User, Token
+
+from modules.datastore.sql_connector import SqlConnection, SqlAddress, SqlOther, SqlResponse
+from .routers import user, task, response, address
+
+oauth2 = OAuth2()
+sql_connection = SqlConnection()
+session = sql_connection.getSession()
+sqlAddress = SqlAddress(session)
+sqlResponse = SqlResponse(session)
+sqlOther = SqlOther(session)
 
 
-sql_conn = DatastoreSqlConnector()
 if TESTING:
-    sql_conn.clear_all_tables()
-
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="token",
-    scopes={"reader": "Reading information", "writer": "Writing information"},
-)
-
-API_KEYS = [
-"9d207bf0-10f5-4d8f-a479-22ff5aeff8d1",
-"f47d4a2c-24cf-4745-937e-620a5963c0b8",
-"b7061546-75e8-444b-a2c4-f19655d07eb8",
-]
-
-api_key_query = APIKeyQuery(name="api-key", auto_error=False)
-api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
+    sqlOther.clear_all_tables()
 
 app = FastAPI()
+app.include_router(user.router)
+app.include_router(task.router)
+app.include_router(response.router)
+app.include_router(address.router)
 print("https://127.0.0.1:8000/docs")  # link to default FastAPI browser
 
 @app.get("/")
 def read_root():
     """ access via FastApi, root directory return true value """
     return {"status": True}
-
-
-"""
-=== START SECURITY ===
-"""
-SECRET_KEY = "885da96a8e6ff8ddfeb25f6196a93cd8f677c46097cc60df2c5812021281da49"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-
-class User(BaseModel):
-    username: str
-    email: Union[str, None] = None
-    full_name: Union[str, None] = None
-    disabled: Union[bool, None] = None
-    role: Union[str, None] = None
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    username: Union[str, None] = None
-    scopes: List[str] = []
-
-class UserInDB(User):
-    hashed_password: str
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-def get_user(username: str):
-    user = {'username': username, 'hashed_password': sql_conn.get_user_hash(username), 'role': sql_conn.get_user(username)}
-    return UserInDB(**user)
-
-def authenticate_user(username: str, password: str):
-    user = get_user(username)
-    if not verify_password(password, sql_conn.get_user_hash(username)):
-        return False
-    return user
-
-def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-async def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)):
-    if security_scopes.scopes:
-        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
-    else:
-        authenticate_value = "Bearer"
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": authenticate_value},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_scopes = payload.get("scopes", [])
-        token_data = TokenData(scopes=token_scopes, username=username)
-    except (JWTError, ValidationError):
-        raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    user = get_user(username=token_data.username)
-    if user is None:
-        raise credentials_exception
-    for scope in security_scopes.scopes:
-        if scope not in token_data.scopes:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not enough permissions",
-                headers={"WWW-Authenticate": authenticate_value},
-            )
-    return user
-
-async def get_current_active_user(current_user: User = Security(get_current_user, scopes=["1"])):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
-
+    
+    #API KEY authentization for workers
+api_key_query = APIKeyQuery(name="api-key", auto_error=False)
+api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
 def get_api_key(api_key_query: str = Security(api_key_query), api_key_header: str = Security(api_key_header)):
-    worker_id = sql_conn.get_worker(api_key_query)
+    worker_id = sqlOther.get_worker(api_key_query)
 
     if api_key_query is not None:
-        worker_id = sql_conn.get_worker(api_key_query)
+        worker_id = sqlOther.get_worker(api_key_query)
         if worker_id is not None:
             return api_key_query
 
     if api_key_header is not None:
-        worker_id = sql_conn.get_worker(api_key_header)
+        worker_id = sqlOther.get_worker(api_key_header)
         if worker_id is not None:
             return api_key_header
 
@@ -156,182 +56,28 @@ def get_api_key(api_key_query: str = Security(api_key_query), api_key_header: st
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid or missing API Key",)
 
-@app.get("/private")
-def private(api_key: str = Security(get_api_key)):
-    """A Private endpoint that requires a valid API key be provided"""
-    return f"Private Endpoint. API Key is: {api_key}"
-
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
+    user = oauth2.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
+    access_token_expires = oauth2.get_access_token_expires()
+    access_token = oauth2.create_access_token(
         data={"sub": user.username, "scopes": [user.role]},
         expires_delta=access_token_expires,
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+#testing endpoint for apiKey authentization
+@app.get("/private")
+def private(api_key: str = Security(get_api_key)):
+    """A Private endpoint that requires a valid API key be provided"""
+    return f"Private Endpoint. API Key is: {api_key}"
 
-@app.get("/users/me/", response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    return current_user
-
-
-
-@app.get("/getUserHash")#get all responses for graph
-async def get_user_hash(username):
-    """
-        generate JSON of all response times by time
-    """
-    return sql_conn.get_user_hash(username)
-
-@app.get("/items/") #testing purpose / oauth2
-async def read_items(current_user: User = Security(get_current_active_user, scopes=["writer"])):
-    return [{"item_id": "Foo", "owner": current_user.username}]
-
-
-@app.post("/createUser")
-async def add_user(username: str, password: str, role: int):
-    hashed_password = get_password_hash(password)
-    sql_conn.create_user(username=username, hashed_password=hashed_password, role=role)
-
-
-
-@app.get("/getAllResponses")#get all responses for graph
-def get_avrg_response(time_from: Optional[str] = None, time_to: Optional[str] = None, current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-        generate JSON of all response times by time
-    """
-    return sql_conn.get_all_responses(time_from, time_to)
-
-
-@app.post("/createTask")#insert address
-async def put_new(address, task, time, worker:int, latitude, longitude, color, name, runing: bool=True, hide: bool=False, current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-        generate JSON of all response times by time
-    """
-    data = [address, task, time, worker, latitude, longitude, color, name, runing, hide]
-    print("přidá: ", data)
-    return sql_conn.create_task(data)
-
-@app.post("/associateTask") #associtate task to worker
-async def put_new(taskId:int, workerId:int, current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-        generate JSON of all response times by time
-    """
-    data = [taskId, workerId]
-    return sql_conn.associate_task(data)
-
-
-@app.post("/deleteTask") #delete address from task table and responses of address
-async def dell(address,current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-        generate JSON of all response times by time
-    """
-    print("dell: ",address)
-    return sql_conn.delete_task(address)
-
-@app.post("/deleteAllResponses")#delete all responses
-async def delete_responses(current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-        generate JSON of all response times by time
-    """
-    return sql_conn.delete_all_responses()
-
-@app.post("/updateTask")#update tasks dont remove data
-async def update_task(address, task, time, worker, oldAddress, latitude, longitude, color, name, runing: bool, current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-        generate JSON of all response times by time
-    """
-    data = [address, task, time, worker, latitude, longitude, color, name, runing, oldAddress]
-    print("upravi: ", data)
-    return sql_conn.update_task(data)
-
-@app.post("/pauseTask") #pause/start
-async def pause(address, runing: bool = True, current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-        generate JSON of all response times by time
-    """
-    data = [address, runing]
-    print("Start: ", data)
-    return sql_conn.pause_task(data)
-
-@app.post("/hideTask") #pause/start
-async def pause(address, hide: bool = False, current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-        generate JSON of all response times by time
-    """
-    data = [address, hide]
-    print("Start: ", data)
-    return sql_conn.hide_task(data)
-
-@app.get("/getWorkerTasks")
-def get_worker_tasks(worker,current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-    Return tasks for given worker
-    """
-    return sql_conn.get_worker_tasks(worker)
-
-
-@app.get("/getAverageResponse")
-def get_avrg_response(date_from: Optional[str] = None, date_to: Optional[str] = None):
-    """
-        generate JSON of average response time of each ip addresses,
-        dateFrom and dateTo are optional
-    """
-    return sql_conn.get_avrg_response_all(date_from, date_to)
-
-@app.get("/getResponseSummary")
-def get_response_summary(worker=False, time_from: Optional[str] = None, time_to: Optional[str] = None, current_user: User = Security(get_current_active_user, scopes=["1"])):
-    """
-    get info is detailed list of addresses (generate: number of addr records,
-    first time testing, last time testing and average responsing time)"""
-    return sql_conn.get_response_summary(worker, time_from, time_to)
-
-@app.get("/addResponse")
-def add_response(address, time, value, task, worker):
-    """
-    create new row (response) into db
-    """
-    sql_conn.add_response(address, time, value, task, worker)
-    return {"status": True}
-
-
-@app.get("/getAllAddresses")
-def get_worker_tasks():
-    """
-    Get all addresses
-    """
-    return sql_conn.get_all_addresses()
-
-@app.get("/getAddress") # TODO ?
-def get_worker_tasks(address):
-    """
-    Delete address specified in request provided data
-    """
-    return sql_conn.get_address(address)
-
-@app.post("/updateAddress")
-async def update_address(request: Request):
-    """
-    Update address from provided data
-    """
-    data = await request.json()
-    return sql_conn.update_address(data)
-
-@app.post("/deleteAddress")
-async def delete_address(request: Request):
-    """
-    Delete address specified in request provided data
-    """
-    data = await request.json()
-    return sql_conn.delete_address(data)
 
 @app.post("/syncWorker")
 async def sync_worker(request: Request):
@@ -341,7 +87,7 @@ async def sync_worker(request: Request):
     return list of tasks for given worker
     """
     data = await request.json()
-    return sql_conn.sync_worker(data)
+    return sqlOther.sync_worker(data)
 
 @app.get("/report", response_class=HTMLResponse)
 async def make_report():
@@ -349,7 +95,7 @@ async def make_report():
     Create and return html report.
     """
     worker = "default"
-    responses = sql_conn.get_responses(worker=worker)
+    responses = sqlResponse.get_responses(worker=worker)
 
     df = old_report.responses2df(responses)
 
@@ -373,8 +119,8 @@ async def make_map(latitude=50.0755, longitude=14.4378):
     TODO: maybe join sql request instead of manual joining
     """
     worker = "default"
-    annotated_addresses = sql_conn.get_all_addresses()
-    address_summaries = sql_conn.get_response_summary(worker=worker)
+    annotated_addresses = sqlAddress.get_all_addresses()
+    address_summaries = sqlResponse.get_response_summary(worker=worker)
 
     addresses = []
     for address in annotated_addresses["data"]:

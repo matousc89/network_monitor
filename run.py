@@ -35,6 +35,7 @@ def run_storage_app(address, port):
             ssl_keyfile='certificate/Local1Key.pem',
             ssl_certfile='certificate/Local1crt.pem')
 
+
 def run_storage_app_process(address, port):
     """
     run storage app as a process
