@@ -61,4 +61,12 @@ class SqlOther(CommonSqlConnector):
         except:
             return None
 
+    def get_workers(self):
+        try:
+            with self.sessions.begin() as session:
+                result = session.query(Worker)
+                return [item.__dict__ for item in result.all()]
+        except:
+            return None
+
     

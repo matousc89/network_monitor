@@ -78,6 +78,9 @@ def private(api_key: str = Security(get_api_key)):
     """A Private endpoint that requires a valid API key be provided"""
     return f"Private Endpoint. API Key is: {api_key}"
 
+@app.get("/workers")
+def getWorker(current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+    return sqlOther.get_workers()
 
 @app.post("/syncWorker")
 async def sync_worker(request: Request):
@@ -135,4 +138,4 @@ async def make_map(latitude=50.0755, longitude=14.4378):
 
 
 
-app.mount("/media", StaticFiles(directory="media"), name="media")
+#app.mount("/media", StaticFiles(directory="media"), name="media")

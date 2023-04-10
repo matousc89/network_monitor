@@ -25,11 +25,12 @@ async def put_new(address, task, time, worker:int, latitude, longitude, color, n
     return sqlTask.create(data)
 
 @router.post("/associate") #associtate task to worker
-async def put_new(taskId:int, workerId:int, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+async def put_new(taskId, workerId, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
     data = [taskId, workerId]
+    print(data)
     return sqlTask.associate(data)
 
 
@@ -40,6 +41,13 @@ async def dell(address,current_user: User = Security(oauth2.get_current_active_u
     """
     print("dell: ",address)
     return sqlTask.delete(address)
+
+@router.post("/associateDelete") #delete address from task table and responses of address
+async def dell(taskId, workerId,current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+    """
+        generate JSON of all response times by time
+    """
+    return sqlTask.associate_delete(workerId, taskId)
 
 @router.post("/update")#update tasks dont remove data
 async def update_task(address, task, time, worker, oldAddress, latitude, longitude, color, name, runing: bool, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
@@ -74,3 +82,17 @@ def get_worker_tasks(worker,current_user: User = Security(oauth2.get_current_act
     Return tasks for given worker
     """
     return sqlTask.WorkersTask(worker)
+
+@router.get("/getActiveTasks")
+def get_active_task(workerId,current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+    """
+    Return tasks for given worker
+    """
+    return sqlTask.getActiveTasks(workerId)
+
+@router.get("/getTasks")
+def get_worker_tasks(current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+    """
+    Return tasks for given worker
+    """
+    return sqlTask.getTasks()

@@ -50,6 +50,25 @@ class SqlTask(CommonSqlConnector):
             addressTask = session.query(Task).filter(Task.address == address).delete()
 
         return {"status": "200"}
+
+    def associate_delete(self, workerId, taskId):
+        """
+        delete address from tasks and responses of address
+
+        delete_stmt = (
+...     delete(user_table)
+...     .where(user_table.c.name == "patrick")
+...     .returning(user_table.c.id, user_table.c.name)
+... )
+>>> print(delete_stmt)
+
+        """
+        with self.sessions.begin() as session:
+            statement = worker_has_task.delete().where(worker_has_task.c.task_id==taskId, worker_has_task.c.worker_id==workerId)
+            session.execute(statement)
+            session.commit()
+        return {"status": "200"}
+
     def update(self, data):
         """
         update task (dell old and save new)
@@ -104,6 +123,24 @@ class SqlTask(CommonSqlConnector):
             query = session.query(Task).join(Task, Worker.task).filter(Worker.id == worker)
             #query = session.query(Task).filter(Task.worker == worker)
             return [item.__dict__ for item in query.all()] # TODO make custom function in Task class (instead of __dict__)
+
+    def getTasks(self):
+        """
+        Returns list of tasks for requested worker.
+        """
+        with self.sessions.begin() as session:
+            query = session.query(Task).join(Task, Worker.task)
+            #query = session.query(Task).filter(Task.worker == worker)
+            return [item.__dict__ for item in query.all()] # TODO make custom function in Task class (instead of __dict__)
+
+    def getActiveTasks(self, workerId):
+        """
+        Returns list of tasks for requested worker.
+        """
+        with self.sessions.begin() as session:
+            query = session.query(Task).join(Task, Worker.task).filter(Worker.id == workerId)
+            #query = session.query(Task).filter(Task.worker == worker)
+            return [item.id for item in query.all()] # TODO make custom function in Task class (instead of __dict__)
     
 
        
