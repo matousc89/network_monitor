@@ -11,7 +11,7 @@ from settings import TESTING
 from modules.datastore.OAuth2 import OAuth2, User, Token
 
 from modules.datastore.sql_connector import SqlConnection, SqlAddress, SqlOther, SqlResponse
-from .routers import user, task, response, address
+from modules.datastore.routers import user, task, response, address
 
 oauth2 = OAuth2()
 sql_connection = SqlConnection()
@@ -79,8 +79,12 @@ def private(api_key: str = Security(get_api_key)):
     return f"Private Endpoint. API Key is: {api_key}"
 
 @app.get("/workers")
-def getWorker(current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+def workers(current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
     return sqlOther.get_workers()
+
+@app.get("/createWorker")
+def createWorker(worker_name, api_key, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+    return sqlOther.create_worker(worker_name, api_key)
 
 @app.post("/syncWorker")
 async def sync_worker(request: Request):

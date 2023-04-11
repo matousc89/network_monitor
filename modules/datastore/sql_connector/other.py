@@ -69,4 +69,18 @@ class SqlOther(CommonSqlConnector):
         except:
             return None
 
+    def create_worker(self, worker_name, api_key):
+        """
+        add new task
+        """ # TODO add colors and name to database
+        test = DataValidation()
+        result = Worker(
+            name=worker_name,
+            token=api_key
+        )
+
+        with self.sessions.begin() as session:
+            session.add(result)
+
+        return {"status": "200"}
     

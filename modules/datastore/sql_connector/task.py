@@ -129,7 +129,7 @@ class SqlTask(CommonSqlConnector):
         Returns list of tasks for requested worker.
         """
         with self.sessions.begin() as session:
-            query = session.query(Task).join(Task, Worker.task)
+            query = session.query(Task)
             #query = session.query(Task).filter(Task.worker == worker)
             return [item.__dict__ for item in query.all()] # TODO make custom function in Task class (instead of __dict__)
 

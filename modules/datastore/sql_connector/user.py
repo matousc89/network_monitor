@@ -25,5 +25,4 @@ class SqlUser(CommonSqlConnector):
         with self.sessions.begin() as session:
             result = session.query(Users).filter(Users.username == username).one()
             return result.hashed_password
-
     
