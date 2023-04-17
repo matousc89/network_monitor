@@ -1,5 +1,4 @@
 fastapi
-sqlalchemy
 ping3
 uvicorn
 requests
