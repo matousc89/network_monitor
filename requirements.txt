@@ -1,4 +1,5 @@
 fastapi
+sqlalchemy>2
 ping3
 uvicorn
 requests
@@ -6,3 +7,6 @@ matplotlib
 pandas
 scipy
 folium
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart

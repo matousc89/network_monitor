@@ -13,6 +13,7 @@ import uvicorn
 
 from modules.worker.main import Worker
 from settings import DATASTORE_APP_ADDRESS
+from subprocess import Popen
 
 def run_worker_app_process():
     """
@@ -26,8 +27,14 @@ def run_storage_app(address, port):
     """
     start the storage application with uvicorn
     """
-    uvicorn.run("modules.datastore.main:app", host=address,
-                port=port, log_level="debug") # TODO critical log level in production maybe
+    #uvicorn.run("modules.datastore.main:app", host=address,
+    #           port=port, log_level="debug") # TODO critical log level in production maybe
+    #Popen(['python', '-m', 'https_redirect'])
+    uvicorn.run("modules.datastore.main:app", port=port, host=address,
+            #reload=True, reload_dirs=['html_files'],
+            ssl_keyfile='certificate/Local1Key.pem',
+            ssl_certfile='certificate/Local1crt.pem')
+
 
 def run_storage_app_process(address, port):
     """
