@@ -32,7 +32,16 @@ class DatastoreSqlConnector(CommonSqlConnector):
         with self.sessions.begin() as session:
             query = session.query(Response)
             return {"status": "200", "data": [item.values() for item in query.all()]}
+    
+    def get_all_responses_from(self, time_from):
+    """
+    generate JSON of all responses from
+    """ # TODO time selection
 
+    with self.sessions.begin() as session:
+        query = session.query(Response)
+        query = query.filter(Response.time > time_from)
+        return {"status": "200", "data": [item.values() for item in query]}
 
     def create_task(self, data):
         """
