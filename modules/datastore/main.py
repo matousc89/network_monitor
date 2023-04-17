@@ -56,6 +56,7 @@ def get_api_key(api_key_query: str = Security(api_key_query), api_key_header: st
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid or missing API Key",)
 
+
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = oauth2.authenticate_user(form_data.username, form_data.password)
@@ -71,6 +72,24 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         expires_delta=access_token_expires,
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/getAllResponsesFrom")#get all responses for graph
+def get_responses_from(timeFrom):
+    """
+        generate JSON of all response times by time from time
+    """
+    return sql_conn.get_all_responses_from(timeFrom)
+
+
+@app.post("/createTask")#insert address
+async def put_new(address, task, time, worker):
+    """
+        generate JSON of all response times by time
+    """
+    data = [address,task,time,worker]
+    print("přidá: ", data)
+    return sql_conn.create_task(data)
+
 
 #testing endpoint for apiKey authentization
 @app.get("/private")
