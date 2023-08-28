@@ -19,7 +19,7 @@ class User(BaseModel):
     email: Union[str, None] = None
     full_name: Union[str, None] = None
     disabled: Union[bool, None] = None
-    role: Union[str, None] = None
+    role: Union[int, None] = None
 
 class Token(BaseModel):
     access_token: str
@@ -58,8 +58,9 @@ class OAuth2:
 
     def get_password_hash(self, password):
         return self.pwd_context.hash(password)
-    @staticmethod
-    def get_user(username: str):
+ 
+
+    def get_user(self, username: str):
         user = {'username': username, 'hashed_password': OAuth2.sqlUser.get_hash(username), 'role': OAuth2.sqlUser.get(username)}
         return UserInDB(**user)
 
@@ -112,8 +113,9 @@ class OAuth2:
                     headers={"WWW-Authenticate": authenticate_value},
                 )
         return user
-    @staticmethod
-    async def get_current_active_user(current_user: User = Security(get_current_user, scopes=["1"])):
+
+
+    async def get_current_active_user(self, current_user: User = Security(get_current_user, scopes=["1"])):
         if current_user.disabled:
             raise HTTPException(status_code=400, detail="Inactive user")
         return current_user
