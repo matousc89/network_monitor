@@ -1,23 +1,16 @@
 #Deriving the latest base image
-FROM python:3.7.17-alpine
+FROM python:3.8-slim-buster
 
 RUN pip install --upgrade pip
-RUN pip install --upgrade setuptools
+RUN pip install setuptools
 
-RUN apk update \
-    apk add \
-    build-base \
-    postgresql \
-    postgresql-dev \
-    libpq \
-    pip \
-    python-numpy \
-    python-scipy 
+RUN apt-get update -y
 
+    
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 COPY ./requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # Any working directory can be chosen as per choice like '/' or '/home' etc
 # i have chosen /usr/app/src
