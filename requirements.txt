@@ -3,7 +3,6 @@ sqlalchemy>2
 ping3
 uvicorn
 requests
-matplotlib
 pandas
 scipy
 folium
