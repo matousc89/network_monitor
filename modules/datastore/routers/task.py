@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException,Security
+from fastapi import APIRouter, Depends, HTTPException,Security, Response
 from modules.datastore.sql_connector import SqlConnection, SqlTask
 from modules.datastore.OAuth2 import OAuth2, User, Token
+from modules.datastore.models import Task, TaskPydantic
+from typing import Any
+
 
 
 router = APIRouter(
@@ -23,6 +26,11 @@ async def put_new(address, task, time, worker:int, latitude, longitude, color, n
     data = [address, task, time, worker, latitude, longitude, color, name, runing, hide]
     print("přidá: ", data)
     return sqlTask.create(data)
+
+#insert address
+@router.post("/neco2", response_model=None)
+async def new_address(task: TaskPydantic, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])) -> Any:
+    return sqlTask.createTask(task)
 
 @router.post("/associate") #associtate task to worker
 async def put_new(taskId, workerId, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):

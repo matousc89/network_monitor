@@ -13,8 +13,10 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
 from sqlalchemy import Table
+from pydantic import BaseModel, EmailStr
 
-from modules.models import BaseTask, BaseResponse, BaseItem
+
+from modules.models import BaseTask, BaseResponse, BaseItem, BaseTaskSchema, BaseResponseSchema
 
 Base = declarative_base()
 
@@ -35,6 +37,10 @@ class Response(BaseResponse, Base):
             "value": self.value,
             "worker": self.worker
         }
+
+class ResponseSchema(BaseResponseSchema):
+    address: str
+    worker: str
 
 """
 class Task(BaseTask, Base):
@@ -129,6 +135,12 @@ class Worker(Base1):
 
         }
 
+class TaskPydantic(BaseModel):
+    id: int
+    address: str
+    name: EmailStr
+    latitude: int
+
 
 class Task(Base1,BaseTask):
     """
@@ -157,7 +169,6 @@ class Task(Base1,BaseTask):
             "longitude": self.longitude,
             "note": self.note,
             "color": self.color,
-
         }
 
 class UserHasWorker(Base):

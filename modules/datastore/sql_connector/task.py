@@ -34,6 +34,13 @@ class SqlTask(CommonSqlConnector):
                         session.add(result)
 
         return {"status": DataValidation().IP()}
+    
+    def createTask(self, task: Task):
+        with self.sessions.begin() as session:
+            existAddress = session.query(exists().where(Task.address == task.address)).scalar()
+            if not existAddress:
+                session.add(task)
+        return {"status": "200"}
 
     def associate(self, data):
         with self.sessions.begin() as session:
