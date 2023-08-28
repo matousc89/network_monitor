@@ -1,6 +1,5 @@
 #Deriving the latest base image
-FROM python:3.8-slim-buster
-
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
 RUN pip install --upgrade pip
 RUN pip install setuptools
 

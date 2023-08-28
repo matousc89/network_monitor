@@ -3,9 +3,4 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
-  postgres:
-    image: postgres:9.6.2-alpine
-    environment:
-      POSTGRES_USER: todoapp
-      POSTGRES_DB: todos
+      - "8081:8081"

@@ -112,7 +112,6 @@ class OAuth2:
                     headers={"WWW-Authenticate": authenticate_value},
                 )
         return user
-
     @staticmethod
     async def get_current_active_user(current_user: User = Security(get_current_user, scopes=["1"])):
         if current_user.disabled:
