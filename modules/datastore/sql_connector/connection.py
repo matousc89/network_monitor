@@ -5,7 +5,7 @@ import sqlite3 #  i have added this if you find better way to handle databases, 
 
 from settings import DATASTORE_DATABASE
 from modules.datastore.models import Response, Task, Address, Users, Worker, worker_has_task
-from modules.datastore.models import make_tables
+from modules.datastore.models import make_tables, init_data
 from modules.sql_connector import CommonSqlConnector
 from modules.datastore.data_validation import DataValidation
 
@@ -16,6 +16,7 @@ class SqlConnection(CommonSqlConnector):
             """
             engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=False)
             make_tables(engine)
+            init_data(engine)
             self.sessions = sessionmaker(engine)
 
     def getSession(self):

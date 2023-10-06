@@ -20,11 +20,12 @@ class Worker():
     """
     Worker class
     """
+    #TODO: Kdyz neni dostupny datastore, vyhazuje chybu, mozno testovat tak, ze se zmeni sync-worker na neco jineho
 
     def __init__(self, run=True):
         logging.config.dictConfig(worker_log_config)
-        self.name = "default"# TODO where it should be stored? Should default value be UUID?
-        self.datastore_url = build_url(*DATASTORE_APP_ADDRESS, "syncWorker")
+        self.name = "gfdafdsafdsa"# TODO where it should be stored? Should default value be UUID?
+        self.datastore_url = build_url(*DATASTORE_APP_ADDRESS, "sync-worker")
         self.sql_conn = WorkerSqlConnector(self.name)
         self.sql_conn.reset_tasks()
         if run:

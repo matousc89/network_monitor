@@ -1,7 +1,9 @@
 from modules.sql_connector import CommonSqlConnector
 from modules.datastore.models import Response, Task, Address, Users, Worker, worker_has_task
 from modules.datastore.data_validation import DataValidation
+from modules.datastore.schema import TaskIn, TaskOut, TaskAssociate, TaskDelete
 from sqlalchemy.sql import func, exists
+from fastapi import HTTPException
 
 
 class SqlTask(CommonSqlConnector):
@@ -11,67 +13,60 @@ class SqlTask(CommonSqlConnector):
         """
         self.sessions = db_connection
 
-    def create(self, data):
+    def create(self, data: TaskIn):
         """
         add new task
         """ # TODO add colors and name to database
         test = DataValidation()
         result = Task(
-            address=data[0],
-            frequency=data[2],
-            task=data[1],
-            name=data[7],
-            latitude=data[4],
-            longitude=data[5],
-            color=data[6],
-            runing=data[8],
-            hide=data[9]
+            address_id=data.address_id,
+            frequency=data.frequency,
+            task=data.task,
+            running=data.running,
+            hide=data.hide
         )
 
         with self.sessions.begin() as session:
-                    existAddress = session.query(exists().where(Task.address == data[0])).scalar()
-                    if not existAddress:
-                        session.add(result)
+            existAddress = session.query(exists().where(Address.id == data.address_id)).scalar()
+            if existAddress:
+                session.add(result)
+                session.flush()
+                session.refresh(result)
+                result = TaskOut(
+                    id = result.id,
+                    **data.dict()
+                )
+                return result
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Address not exists"
+                )
 
-        return {"status": DataValidation().IP()}
-    
-    def createTask(self, task: Task):
-        with self.sessions.begin() as session:
-            existAddress = session.query(exists().where(Task.address == task.address)).scalar()
-            if not existAddress:
-                session.add(task)
-        return {"status": "200"}
+ #       return {"status": DataValidation().IP()}
 
+
+    # TODO: Zkontrolovat, ze existuje worker a task
     def associate(self, data):
         with self.sessions.begin() as session:
-            statement = worker_has_task.insert().values(task_id=data[0], worker_id=data[1])
+            statement = worker_has_task.insert().values(task_id=data.taskId, worker_id=data.workerId)
             session.execute(statement)
             session.commit()
 
 
-    def delete(self, address):
+    def delete(self, data: TaskDelete):
+        """
+        delete address from tasks
+        """
+        with self.sessions.begin() as session:
+            addressTask = session.query(Task).filter(Task.address == data.address).delete()
+
+    def associate_delete(self, data: TaskAssociate):
         """
         delete address from tasks and responses of address
         """
         with self.sessions.begin() as session:
-            addressTask = session.query(Task).filter(Task.address == address).delete()
-
-        return {"status": "200"}
-
-    def associate_delete(self, workerId, taskId):
-        """
-        delete address from tasks and responses of address
-
-        delete_stmt = (
-...     delete(user_table)
-...     .where(user_table.c.name == "patrick")
-...     .returning(user_table.c.id, user_table.c.name)
-... )
->>> print(delete_stmt)
-
-        """
-        with self.sessions.begin() as session:
-            statement = worker_has_task.delete().where(worker_has_task.c.task_id==taskId, worker_has_task.c.worker_id==workerId)
+            statement = worker_has_task.delete().where(worker_has_task.c.task_id==data.taskId, worker_has_task.c.worker_id==data.workerId)
             session.execute(statement)
             session.commit()
         return {"status": "200"}

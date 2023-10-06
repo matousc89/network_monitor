@@ -1,7 +1,7 @@
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, Integer, Boolean
 
-from modules.models import BaseTask, BaseResponse
+from modules.models import BaseTaskWorker, BaseResponse
 
 Base = declarative_base()
 
@@ -21,7 +21,7 @@ class Response(BaseResponse, Base):
         }
 
 
-class Task(BaseTask, Base):
+class Task(BaseTaskWorker, Base):
     """
     Definition of task.
     """

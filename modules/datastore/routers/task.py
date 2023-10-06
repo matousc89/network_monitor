@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException,Security, Response
 from modules.datastore.sql_connector import SqlConnection, SqlTask
 from modules.datastore.OAuth2 import OAuth2, User, Token
-from modules.datastore.models import Task, TaskPydantic
+from modules.datastore.models import Task
+from modules.datastore.schema import TaskIn, TaskAssociate, TaskDelete
 from typing import Any
 
 
@@ -18,44 +19,38 @@ session = sql_connection.getSession()
 sqlTask = SqlTask(session)
 
 
-@router.post("/create")#insert address
-async def put_new(address, task, time, worker:int, latitude, longitude, color, name, runing: bool=True, hide: bool=False, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+@router.post("/", status_code=200)#insert address
+async def create_new(task: TaskIn, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
-    data = [address, task, time, worker, latitude, longitude, color, name, runing, hide]
-    print("přidá: ", data)
-    return sqlTask.create(data)
+#    data = [address, task, time, worker, latitude, longitude, color, name, runing, hide]
+#    print("přidá: ", data)
+    return sqlTask.create(task)
 
-#insert address
-@router.post("/neco2", response_model=None)
-async def new_address(task: TaskPydantic, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])) -> Any:
-    return sqlTask.createTask(task)
 
-@router.post("/associate") #associtate task to worker
-async def put_new(taskId, workerId, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+@router.post("/associate", status_code=200) #associtate task to worker
+async def put_new(data: TaskAssociate, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
-    data = [taskId, workerId]
-    print(data)
     return sqlTask.associate(data)
 
 
-@router.post("/delete") #delete address from task table and responses of address
-async def dell(address,current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+@router.delete("/") #delete address from task table and responses of address
+async def delete(data:TaskDelete,current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
-    print("dell: ",address)
-    return sqlTask.delete(address)
+    print("dell: ",data.address)
+    return sqlTask.delete(data)
 
-@router.post("/associateDelete") #delete address from task table and responses of address
-async def dell(taskId, workerId,current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
+@router.post("/associate-delete") #delete address from task table and responses of address
+async def deleteAssociate(data:TaskAssociate,current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
     """
         generate JSON of all response times by time
     """
-    return sqlTask.associate_delete(workerId, taskId)
+    return sqlTask.associate_delete(data)
 
 @router.post("/update")#update tasks dont remove data
 async def update_task(address, task, time, worker, oldAddress, latitude, longitude, color, name, runing: bool, current_user: User = Security(oauth2.get_current_active_user, scopes=["1"])):
