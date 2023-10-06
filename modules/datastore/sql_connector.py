@@ -20,7 +20,7 @@ class DatastoreSqlConnector(CommonSqlConnector):
         """
         Init the sql connector (connect, prepare tables).
         """
-        engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=False)
+        engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=True)
         make_tables(engine)
         self.sessions = sessionmaker(engine)
         

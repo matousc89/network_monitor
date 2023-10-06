@@ -9,7 +9,6 @@ class AddressIn(BaseModel):
     longitude: float
     note: Optional[str]
     color: str
-    running: bool
 
 class AddressOut(AddressIn):
     id: int

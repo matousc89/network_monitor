@@ -14,9 +14,12 @@ class SqlConnection(CommonSqlConnector):
             """
             Init the sql connector (connect, prepare tables).
             """
-            engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=False)
-            make_tables(engine)
-            init_data(engine)
+            try:
+                engine = db.create_engine('sqlite:///{}'.format(DATASTORE_DATABASE), echo=False)
+                make_tables(engine)
+                init_data(engine)
+            except:
+                raise SystemExit('Sqlite is not available')
             self.sessions = sessionmaker(engine)
 
     def getSession(self):

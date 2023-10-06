@@ -60,7 +60,6 @@ class SqlAddress(CommonSqlConnector):
                     latitude = address.latitude,
                     longitude = address.longitude,
                     note = address.note,
-                    running = address.runing,
                     color = address.color,
                     address = address.address, 
                 )
@@ -95,34 +94,27 @@ class SqlAddress(CommonSqlConnector):
         """
         Get information about IP address
         """
-        try:
-            with self.sessions.begin() as session:
-                address = session.query(Address).filter(Address.address == address).first()
-                if address is None:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Address not found",
-                    )
-                    return {"status": "500"}
-                else:
-                    print(address.color)
-                    address_result = AddressOut(
-                        id = address.id,
-                        address = address.address,
-                        name = address.name,
-                        location = address.location,
-                        latitude = address.latitude,
-                        longitude = address.longitude,
-                        note = address.note,
-                        color = address.color,
-                        running= address.runing
-                    )
-                    return address_result
-        except:
-            raise HTTPException(
-                status_code=500,
-                detail="Database unknown error"
-            )
+        print(address)
+        with self.sessions.begin() as session:
+            address_row = session.query(Address).filter(Address.address == address).first()
+            if address_row is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Address not found",
+                )
+                return {"status": "500"}
+            else:
+                address_result = AddressOut(
+                    id = address_row.id,
+                    address = address_row.address,
+                    name = address_row.name,
+                    location = address_row.location,
+                    latitude = address_row.latitude,
+                    longitude = address_row.longitude,
+                    note = address_row.note,
+                    color = address_row.color,
+                )
+                return address_result
 
     def get_all(self):
         """
@@ -141,7 +133,6 @@ class SqlAddress(CommonSqlConnector):
                         longitude = address.longitude,
                         note = address.note,
                         color = address.color,
-                        running= address.runing
                     ) for address in query]
                 return address_result
         except:

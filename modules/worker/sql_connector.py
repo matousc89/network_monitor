@@ -20,9 +20,12 @@ class WorkerSqlConnector(CommonSqlConnector):
         Init the sql connector (connect, prepare tables).
         """
         self.worker = worker
-        engine = db.create_engine(f'sqlite:///{WORKER_DATABASE}', echo=False)
-        make_tables(engine)
-        self.sessions = sessionmaker(engine)
+        try:
+            engine = db.create_engine(f'sqlite:///{WORKER_DATABASE}', echo=False)
+            make_tables(engine)
+            self.sessions = sessionmaker(engine)
+        except:
+            raise SystemExit('Sqlite is not available, shutting down worker')
 
     def clear_all_tables(self):
         """
