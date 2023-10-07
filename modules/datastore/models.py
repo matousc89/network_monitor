@@ -159,13 +159,15 @@ class Task(Base1, BaseTask):
             "id": self.id,
             "running": self.running,
             "hide": self.hide,
-#           "address": self.address,
-#            "name": self.name,
-#            "location": self.location,
-#            "latitude": self.latitude,
-#            "longitude": self.longitude,
-#            "note": self.note,
-#            "color": self.color,
+            "address": self.address.address,
+            "task": self.task,
+            "frequency": self.frequency,
+            "name": self.address.name,
+            "location": self.address.location,
+            "latitude": self.address.latitude,
+            "longitude": self.address.longitude,
+            "note": self.address.note,
+            "color": self.address.color,
         }
 
 class UserHasWorker(Base):

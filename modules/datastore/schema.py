@@ -36,8 +36,8 @@ class TaskAssociate(BaseModel):
     taskId: int
     workerId: int
 
-class TaskDelete(BaseModel):
-    address: str
+class TaskId(BaseModel):
+    id: int
 
 class Response(BaseModel):
     address: str
