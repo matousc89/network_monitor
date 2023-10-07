@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker,joinedload
 import sqlite3 #  i have added this if you find better way to handle databases, you can remove it
 
 from settings import DATASTORE_DATABASE
-from modules.datastore.models import Response, Task, Address, Users, Worker, worker_has_task
+from modules.datastore.models import Response, Task, Address, Users, Worker, worker_has_task, HostStatus
 from modules.datastore.models import make_tables
 from modules.sql_connector import CommonSqlConnector
 from modules.datastore.data_validation import DataValidation
@@ -44,6 +44,16 @@ class SqlOther(CommonSqlConnector):
                             value=response.value,
                             task=response.task,
                             worker=worker_id
+                        )
+                        session.add(result)
+                if data.hosts_availability is not None:
+                    for host in data.hosts_availability:
+                        result = HostStatus(
+                            address=host.address,
+                            time_from=host.time_from,
+                            time_to=host.time_to,
+                            available=host.available,
+                            worker_id=worker_id
                         )
                         session.add(result)
                     # TODO alter task last update

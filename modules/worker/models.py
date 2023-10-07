@@ -1,5 +1,5 @@
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, Boolean
+from sqlalchemy import Column, Integer, Boolean, String
 
 from modules.models import BaseTaskWorker, BaseResponse
 
@@ -27,6 +27,8 @@ class Task(BaseTaskWorker, Base):
     """
     active = Column(Integer)
     next_run = Column(Integer, default=0)
+    available = Column(Boolean, default=None)
+    available_from = Column(Integer)
 
     def values(self):
         return {
@@ -36,8 +38,28 @@ class Task(BaseTaskWorker, Base):
             "task": self.task,
             "next_run": self.next_run,
             "last_run": self.last_run,
+            "available": self.available,
+            "available_from": self.available_from
         }
 
+
+class HostStatus(Base):
+    __tablename__ = 'host_status'
+    id = Column(Integer, primary_key=True)
+    address = Column(String(15))
+    time_from = Column(Integer)
+    time_to = Column(Integer)
+    available = Column(Boolean)
+    synced = Column(Boolean, default=False)
+
+    def sync_values(self):
+        return {
+            "id": self.id,
+            "address": self.address,
+            "time_from": self.time_from,
+            "time_to": self.time_to,
+            "available": self.available,
+        }
 
 def make_tables(engine):
     """

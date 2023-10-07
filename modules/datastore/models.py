@@ -61,6 +61,14 @@ class Task(BaseTask, Base):
     hide = Column(Boolean)
 """
 
+class HostStatus(Base):
+    __tablename__ = 'host_status'
+    id = Column(Integer, primary_key=True)
+    worker_id = Column(Integer)
+    address = Column(String(15))
+    time_from = Column(Integer)
+    time_to = Column(Integer)
+    available = Column(Boolean)
 
 class Address(Base1, BaseItem):
     """

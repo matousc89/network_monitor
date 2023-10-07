@@ -45,6 +45,13 @@ class Response(BaseModel):
     value: int
     task: str
 
+class HostStatus(BaseModel):
+    address: str
+    time_from: int
+    time_to: int
+    available: bool
+
 class syncWorker(BaseModel):
     responses: Optional[List[Response]]
+    hosts_availability: Optional[List[HostStatus]] 
     api: str
