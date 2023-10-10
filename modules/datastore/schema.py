@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field,Json
 from typing import Optional, List
 
 class AddressIn(BaseModel):
@@ -17,17 +17,15 @@ class AddressDelete(BaseModel):
     address:str
 
 class TaskIn(BaseModel):
-#    worker: int
-#    address: str
-#    name: str
-#    latitude: float
-#    longitude: float
-#    color: str
     address_id: int
     running: bool = Field(default=True)
     hide: bool = Field(default=False)
     task: str
     frequency: str
+    retry: Optional[int] = Field(default=0)
+    timeout: Optional[int] = Field(default=1)
+    treshold: Optional[int] = Field(defalut=50)
+    retry_data: Optional[dict]
 
 class TaskOut(TaskIn):
     id: int

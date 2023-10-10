@@ -176,6 +176,10 @@ class Task(Base1, BaseTask):
             "longitude": self.address.longitude,
             "note": self.address.note,
             "color": self.address.color,
+            "timeout": self.timeout,
+            "retry": self.retry,
+            "treshold": self.treshold,
+            "retry_data": self.retry_data,
         }
 
 class UserHasWorker(Base):
