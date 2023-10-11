@@ -115,7 +115,6 @@ class Worker():
         ## Check hostStatus
         self.sql_conn.initTasks()
 
-
         while True:
             tasks = self.sql_conn.get_tasks()
             now = ms_time()

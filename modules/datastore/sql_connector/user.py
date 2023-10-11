@@ -2,6 +2,8 @@ from modules.sql_connector import CommonSqlConnector
 from modules.datastore.models import Response, Task, Address, Users, Worker, worker_has_task
 from modules.datastore.data_validation import DataValidation
 from sqlalchemy.sql import func, exists
+from fastapi import HTTPException
+
 
 class SqlUser(CommonSqlConnector):
     def __init__(self, db_connection):
@@ -12,8 +14,14 @@ class SqlUser(CommonSqlConnector):
 
     def get(self, username):
         with self.sessions.begin() as session:
-            result = session.query(Users).filter(Users.username == username).one()
-            return result.role
+            result = session.query(Users).filter(Users.username == username).first()
+            if result:
+                return result.role
+            else:
+             raise HTTPException(
+                status_code=400,
+                detail="Username not found or bad password"
+             )
 
     def create(self, username, hashed_password, role):
             print(username, hashed_password, role)
@@ -23,7 +31,13 @@ class SqlUser(CommonSqlConnector):
 
     def get_hash(self, username):
         with self.sessions.begin() as session:
-            result = session.query(Users).filter(Users.username == username).one()
-            return result.hashed_password
+            result = session.query(Users).filter(Users.username == username).first()
+            if result:
+                return result.hashed_password
+            else:
+             raise HTTPException(
+                status_code=400,
+                detail="Username not found or bad password"
+             )
             
     
