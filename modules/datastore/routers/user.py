@@ -28,7 +28,7 @@ async def get_user_hash(username):
     return sqlUser.get_hash(username)
 
 @router.get("/users/me/", response_model=User)
-async def read_users_me(current_user: User = Depends(oauth2.get_current_active_user)):
+async def read_users_me(current_user: User = Depends(oauth2.get_current_active_user), scopes=[1,2]):
     return current_user
 
 @router.post("/create")

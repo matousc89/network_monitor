@@ -43,6 +43,19 @@ class Response(BaseModel):
     value: int
     task: str
 
+class ResponseAdd(Response):
+    workerId: int
+
+class ResponseGet(BaseModel):
+    time_from: Optional[int]
+    time_to: Optional[int]
+    limit: Optional[int]
+
+class ResponseGetWorker(BaseModel):
+    time_from: Optional[int]
+    time_to: Optional[int]
+    workerId: Optional[int]
+
 class HostStatus(BaseModel):
     address: str
     time_from: int

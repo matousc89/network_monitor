@@ -36,11 +36,6 @@ class SqlTask(CommonSqlConnector):
                 session.flush()
                 session.refresh(result)
 
-                #print("type " + str(type(result.retry_data)))
-                #result = TaskOut(
-                #    id = result.id,
-                #    **data.dict()
-                #)
                 return result.values()
             else:
                 raise HTTPException(
