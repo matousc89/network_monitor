@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field,Json
+from pydantic import BaseModel, Field,Json, validator
 from typing import Optional, List
+from modules.datastore.data_validation import DataValidation
 
 class AddressIn(BaseModel):
     address: str
@@ -10,11 +11,21 @@ class AddressIn(BaseModel):
     note: Optional[str]
     color: str
 
+    @validator('address')
+    def validateAddress(cls, value):
+        validation = DataValidation()
+        return validation.validate_ip_address(value)
+
 class AddressOut(AddressIn):
     id: int
 
 class AddressDelete(BaseModel):
     address:str
+
+    @validator('address')
+    def validateAddress(cls, value):
+        validation = DataValidation()
+        return validation.validate_ip_address(value)
 
 class TaskIn(BaseModel):
     address_id: int
@@ -43,6 +54,11 @@ class Response(BaseModel):
     value: int
     task: str
 
+    @validator('address')
+    def validateAddress(cls, value):
+        validation = DataValidation()
+        return validation.validate_ip_address(value)
+
 class ResponseAdd(Response):
     workerId: int
 
@@ -61,6 +77,11 @@ class HostStatus(BaseModel):
     time_from: int
     time_to: int
     available: bool
+
+    @validator('address')
+    def validateAddress(cls, value):
+        validation = DataValidation()
+        return validation.validate_ip_address(value)
 
 class syncWorker(BaseModel):
     responses: Optional[List[Response]]

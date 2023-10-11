@@ -1,5 +1,13 @@
 
+import ipaddress
 
 class DataValidation():
-    def IP(self):
-        return "success"
+
+    def validate_ip_address(self, value):
+        try:
+            # Zkusíme vytvořit objekt IP adresy
+            ip = ipaddress.IPv4Address(value)
+            return str(ip)
+        except ipaddress.AddressValueError:
+            # Pokud selže, vypíšeme chybu
+            raise ValueError("Neplatná IPv4 adresa")
