@@ -1,6 +1,10 @@
+from enum import Enum
 from pydantic import BaseModel, Field,Json, validator
 from typing import Optional, List
 from modules.datastore.data_validation import DataValidation
+
+class TaskEnum(str, Enum):
+    ping = "ping"
 
 class AddressIn(BaseModel):
     address: str
@@ -31,13 +35,18 @@ class TaskIn(BaseModel):
     address_id: int
     running: bool = Field(default=True)
     hide: bool = Field(default=False)
-    task: str
+    task: TaskEnum
     frequency: str
     retry: Optional[int] = Field(default=0)
     timeout: Optional[int] = Field(default=1)
     treshold: Optional[int] = Field(defalut=50)
     retry_data: Optional[dict]
 
+    @validator('frequency')
+    def validateAddress(cls, value):
+        validation = DataValidation()
+        return validation.validate_frequency_format(value)
+        
 class TaskOut(TaskIn):
     id: int
 
@@ -52,7 +61,7 @@ class Response(BaseModel):
     address: str
     time: int
     value: int
-    task: str
+    task: TaskEnum
 
     @validator('address')
     def validateAddress(cls, value):
