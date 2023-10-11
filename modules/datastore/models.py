@@ -15,7 +15,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Table
 from pydantic import BaseModel
 
-
 from modules.models import BaseTask, BaseResponse, BaseItem, BaseTaskSchema, BaseResponseSchema
 
 Base = declarative_base()
@@ -200,7 +199,6 @@ class UserHasWorker(Base):
             "id": self.id,
 
         }
-
 
 def make_tables(engine):
     """

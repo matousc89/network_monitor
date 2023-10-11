@@ -11,6 +11,7 @@ class SqlUser(CommonSqlConnector):
         Init the sql connector (connect, prepare tables).
         """
         self.sessions = db_connection
+        self.check_and_insert_default_data()
 
     def get(self, username):
         with self.sessions.begin() as session:
@@ -40,4 +41,19 @@ class SqlUser(CommonSqlConnector):
                 detail="Username not found or bad password"
              )
             
+    def check_and_insert_default_data(self):
+        with self.sessions.begin() as session:
+            if not session.query(Users).first():
+                # Vytvořte instance ORM modelů a nastavte jim výchozí data
+                user = Users(
+                    username = "admin",
+                    hashed_password = "$2b$12$Pjgg3tarr556qmdX04081.v8SwVMTF0VLlrk/C6IhWiW9peGonzqy",
+                    role = "1"
+                )
+
+                # Přidejte instance do databáze
+                session.add(user)
+
+                # Uložte změny do databáze
+                session.commit()
     
