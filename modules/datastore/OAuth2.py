@@ -19,7 +19,7 @@ class User(BaseModel):
     email: Union[str, None] = None
     full_name: Union[str, None] = None
     disabled: Union[bool, None] = None
-    role: Union[str, None] = None
+    role: Union[int, None] = None
 
 class Token(BaseModel):
     access_token: str
@@ -28,10 +28,11 @@ class Token(BaseModel):
 class TokenData(BaseModel):
 
     username: Union[str, None] = None
-    scopes: List[str] = []
+    scopes: List[int] = []
 
 class UserInDB(User):
     hashed_password: str
+
 
 
 class OAuth2:
@@ -42,9 +43,10 @@ class OAuth2:
 
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
     oauth2_scheme = OAuth2PasswordBearer(
         tokenUrl="token",
-        scopes={"reader": "Reading information", "writer": "Writing information"},
+        scopes={"1": "administrator", "2": "viewer"},
     )
     sql_connection = SqlConnection()
     session = sql_connection.getSession()
@@ -58,8 +60,9 @@ class OAuth2:
 
     def get_password_hash(self, password):
         return self.pwd_context.hash(password)
-    @staticmethod
-    def get_user(username: str):
+ 
+
+    def get_user(self, username: str):
         user = {'username': username, 'hashed_password': OAuth2.sqlUser.get_hash(username), 'role': OAuth2.sqlUser.get(username)}
         return UserInDB(**user)
 
@@ -79,19 +82,21 @@ class OAuth2:
         encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return encoded_jwt
 
-    @staticmethod
-    def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)):
+    async def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)):
+        oauthClass = OAuth2()
         if security_scopes.scopes:
-            authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+            authenticate_value = f'Bearer scope="{security_scopes}"'
         else:
             authenticate_value = "Bearer"
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail="Could not validate credentialss",
             headers={"WWW-Authenticate": authenticate_value},
         )
         try:
-            payload = jwt.decode(token, OAuth2.SECRET_KEY, algorithms=[OAuth2.ALGORITHM])
+            #SECRET_KEY = "885da96a8e6ff8ddfeb25f6196a93cd8f677c46097cc60df2c5812021281da49"
+            #ALGORITHM = "HS256"
+            payload = jwt.decode(token, oauthClass.SECRET_KEY, algorithms=[oauthClass.ALGORITHM])
             username: str = payload.get("sub")
             if username is None:
                 raise credentials_exception
@@ -101,20 +106,33 @@ class OAuth2:
             raise credentials_exception
         except JWTError:
             raise credentials_exception
-        user = OAuth2.get_user(username=token_data.username)
+        
+        user = oauthClass.get_user(username=token_data.username)
         if user is None:
             raise credentials_exception
+
+        if any(scope in security_scopes.scopes for scope in str(token_data.scopes)):
+            return user
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
+        """       
         for scope in security_scopes.scopes:
-            if scope not in token_data.scopes:
+            print("scope: " + scope)
+            if scope not in str(token_data.scopes):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Not enough permissions",
                     headers={"WWW-Authenticate": authenticate_value},
                 )
+        """
         return user
 
-    @staticmethod
-    async def get_current_active_user(current_user: User = Security(get_current_user, scopes=["1"])):
+
+    async def get_current_active_user(self, current_user: User = Security(get_current_user, scopes=["1"])):
         if current_user.disabled:
             raise HTTPException(status_code=400, detail="Inactive user")
         return current_user

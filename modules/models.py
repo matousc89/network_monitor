@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String
+from pydantic import BaseModel
 
 class BaseItem():
     """
@@ -18,13 +19,31 @@ class BaseResponse(BaseItem):
     time = Column(Integer)
     value = Column(Integer)
 
+class BaseResponseSchema(BaseModel):
+    task: str
+    time: int
+    value: int
 
-class BaseTask(BaseItem):
+class BaseTask():
     """
     Definition of task.
     """
     __tablename__ = 'tasks'
-
+    id = Column(Integer, primary_key=True)
     task = Column(String(100))
     frequency = Column(String(5))
     last_run = Column(Integer, default=0)
+    timeout = Column(Integer, default=1)
+    retry = Column(Integer, default=0)
+    retry_time = Column(Integer, default=1000)
+    treshold = Column(Integer, default=50)
+    retry_data = Column(String(300))
+
+class BaseTaskWorker(BaseTask):
+    address = Column(String(100))
+
+
+class BaseTaskSchema(BaseModel):
+    task: str
+    frequency: str
+    last_run: int

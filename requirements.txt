@@ -1,8 +1,9 @@
 fastapi
 sqlalchemy>2
 ping3
-uvicorn
+uvicorn>=0.15.0,<0.16.0
 requests
+numpy
 matplotlib
 pandas
 scipy
